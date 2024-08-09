@@ -62,6 +62,19 @@ public class App {
         Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
       }
     };
+    
+    //TODO: make a controlling thread inside of serverStart thread to close server when not used
+    
+    Runnable serverStart = () -> {
+      while (!Thread.currentThread().isInterrupted()){
+        try {
+          System.out.println("waiting for connection");
+          exec.execute(new ServerThread(port, serverSocket, serverSocket.accept()));
+        } catch (IOException ex) {
+          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        }
+      }
+    };
     Callable<String> callableTask = () -> {
       TimeUnit.MILLISECONDS.sleep(20);
       return "callable task done";
@@ -79,6 +92,8 @@ public class App {
       exec.submit(callableTask);
       exec.submit(callableTask);
       exec.execute(runnableTask);
+      
+      exec.execute(serverStart);
 
 
    
@@ -89,10 +104,7 @@ public class App {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
     }
     
-    while (true){
-      System.out.println("waiting for connection");
-      exec.execute(new ServerThread(port, serverSocket, serverSocket.accept()));
-    }
+    
   }
 }
 
@@ -107,14 +119,16 @@ class ServerThread implements Runnable{
   ObjectOutputStream out;
   BufferedReader in;
   int port;
-  String dataLocation;
+  String fileName;
+  String filePath;
   
 
   public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket) {
       this.port = port;
       this.serverSocket = serverSocket;
       this.clientSocket = clientSocket;
-      dataLocation = "telemetry_data_2.json";
+      fileName = "telemetry_data_1.json";
+      filePath = "C:\\Users\\Andrei\\Documents\\ConsoleExampleDocs\\";
       
   }
   
@@ -124,19 +138,22 @@ class ServerThread implements Runnable{
       out = new ObjectOutputStream(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
       System.out.println("server: reading input");
-      String meta = in.readLine();
+      String[] meta = in.readLine().split(" ");
+      
 
-      if (meta.equals("send")){
+      if (meta[0].equals("send")){
         System.out.println("server: getting values");
         String json = in.lines().collect(Collectors.joining());
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(dataLocation))){
+        fileName = String.format("telemetry_data_%s.json", meta[1]);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath + fileName))){
           writer.write(json);
         } catch (Exception e) {
         }
       }
 
-      else if (meta.equals("get")){
-        try (BufferedReader reader = new BufferedReader(new FileReader(dataLocation))) {
+      else if (meta[0].equals("get")){
+        fileName = String.format("telemetry_data_%s", meta[1]);
+        try (BufferedReader reader = new BufferedReader(new FileReader(filePath + fileName))) {
           System.out.println("server: sending values");
           out.writeObject(reader.readLine());
           System.out.println("server: values sent");

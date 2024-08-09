@@ -7,6 +7,7 @@ package com.my;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -30,6 +31,7 @@ public class TelemetryMessage {
   public TelemetryMessage(){
     data = new ArrayList<>();
     deviceId = "1";
+    timeStamp = Calendar.getInstance().getTimeInMillis();
     
   }
   

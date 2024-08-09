@@ -32,6 +32,7 @@ import org.apache.commons.cli.ParseException;
 public class Client {
   
   public static void main(String[] args) {
+    
     JsonActions jAct = new JsonActions();
     Options options;
     options = jAct.ReadJsonOptions("ClientConfig.json");
@@ -39,6 +40,7 @@ public class Client {
     try {
       CommandLineParser parser = new DefaultParser();
       CommandLine cmd = parser.parse(options, args);
+      System.out.println("executing options");
       new Client().executeOptions(cmd);
     } catch (Exception e) {
     }
@@ -87,7 +89,8 @@ public class Client {
       String deviceId = jsonObject.get("deviceId").getAsString();
       ArrayList<SensorData> data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
       TelemetryMessage message = new TelemetryMessage(timeStamp, deviceId, data);
-      System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
+      System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s"
+              ,message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
       out.flush();
       clientSocket.close();
     } catch (IOException | ClassNotFoundException ex) {

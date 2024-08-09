@@ -32,7 +32,7 @@ public class SendingClient {
       message.generatingSensorData();
       String json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println(json);
-      out.writeBytes("send\n" + json);
+      out.writeBytes("send 3\n" + json);
       out.flush();
       clientSocket.close();
     } catch (IOException ex) {

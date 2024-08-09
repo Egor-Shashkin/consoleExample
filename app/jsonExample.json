@@ -1,0 +1,11 @@
+{
+    "array1": ["same file","as txt","but json"],
+    "prop1": {
+        "prop11":1,
+        "prop12":"string",
+        "prop13":[1,5,6],
+        "prop14":{
+
+        }
+    }
+}

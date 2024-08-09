@@ -1,0 +1,14 @@
+ [ 
+  {
+    "short": "g",
+    "long": "get",
+    "desc": "get stored telemetry values from port <arg>",
+    "hasArg": true
+  },
+  {
+    "short": "s",
+    "long": "send",
+    "desc": "send generated telemetry values to port <arg>",
+    "hasArg": true
+  }
+]

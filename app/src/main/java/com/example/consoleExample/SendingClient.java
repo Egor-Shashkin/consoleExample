@@ -37,6 +37,7 @@ public class SendingClient {
       clientSocket.close();
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
+      
     }
   }
   

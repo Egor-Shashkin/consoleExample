@@ -23,6 +23,7 @@ import java.io.OutputStreamWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -31,7 +32,9 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -66,13 +69,15 @@ public class App {
     //TODO: make a controlling thread inside of serverStart thread to close server when not used
     
     Runnable serverStart = () -> {
-      while (!Thread.currentThread().isInterrupted()){
-        try {
-          System.out.println("waiting for connection");
-          exec.execute(new ServerThread(port, serverSocket, serverSocket.accept()));
-        } catch (IOException ex) {
-          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+      try {
+
+        while (!Thread.currentThread().isInterrupted()){
+            System.out.println("waiting for connection");
+            exec.execute(new ServerThread(port, serverSocket, serverSocket.accept()));
         }
+        serverSocket.close();
+      } catch (IOException ex) {
+        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
       }
     };
     Callable<String> callableTask = () -> {
@@ -85,20 +90,18 @@ public class App {
     taskList.add(callableTask);
     
     
-    
+    Future<?> task = exec.submit(serverStart);
     try {
       //exec.invokeAll(taskList);
       System.out.println(exec.submit(callableTask).get());
       exec.submit(callableTask);
       exec.submit(callableTask);
       exec.execute(runnableTask);
-      
-      exec.execute(serverStart);
+      task.get(30, TimeUnit.SECONDS);
+    } catch (InterruptedException | TimeoutException ex) {
+        serverSocket.close();
+        exec.shutdownNow();
 
-
-   
-
-     } catch (InterruptedException ex) {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
     } catch (ExecutionException ex) {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);

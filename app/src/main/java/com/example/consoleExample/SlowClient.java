@@ -40,7 +40,7 @@ public class SlowClient {
       message.generatingSensorData();
       String json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println("sending data slowly");
-      TimeUnit.SECONDS.sleep(15);
+      TimeUnit.SECONDS.sleep(5);
       out.writeBytes(String.format("send %d%n%s", id, json));
       out.flush();
       clientSocket.close();

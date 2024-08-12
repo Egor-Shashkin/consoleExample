@@ -3,32 +3,19 @@
  */
 package com.example.consoleExample;
 
-import com.google.common.io.Files;
-import com.my.*;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.DataOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
-import java.io.OutputStreamWriter;
 import static java.lang.System.exit;
-import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -36,7 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -56,7 +42,7 @@ public class App {
     AppConfig config = new AppConfig();
     Options options = config.configureOptions();
     config.optionsExecution(options, args);
-    ExecutorService exec = Executors.newFixedThreadPool(4);
+    ExecutorService exec = Executors.newCachedThreadPool();
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(30000);
@@ -68,7 +54,7 @@ public class App {
       exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
       }
       } catch (SocketTimeoutException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        System.out.println("no new connection attempts detected in last 30 seconds \nshutting down the server");
         try {
           serverSocket.close();
         } catch (IOException ex1) {
@@ -92,11 +78,11 @@ public class App {
     
     
     for (int i = 0; i < 5; i++){
-      try {
-        TimeUnit.SECONDS.sleep(1);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-      }
+//      try {
+//        TimeUnit.SECONDS.sleep(3);
+//      } catch (InterruptedException ex) {
+//        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+//      }
       exec.submit(new ClientThread(port, i));
     }
     
@@ -176,7 +162,6 @@ class ServerThread implements Runnable{
     } catch (IOException ex) {
       Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
     }
-    System.out.println();
   }
 }
 

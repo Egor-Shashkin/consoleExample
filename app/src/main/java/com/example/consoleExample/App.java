@@ -66,50 +66,35 @@ public class App {
       }
     };
     
-    
-    Callable<Socket> serverTimerCheck = () -> {
-      return serverSocket.accept();
-    };
-    
-    Runnable serverStart = () -> {
+    Runnable listen = () -> {
       try {
-        while (!Thread.currentThread().isInterrupted()){
-          System.out.println("waiting for connection");
-          Future<Socket> check = exec.submit(serverTimerCheck);
-
-          exec.submit(new ServerThread(port, serverSocket, check.get(30, TimeUnit.SECONDS)));
-          
-        }
-        serverSocket.close();
-      } catch (IOException | InterruptedException | ExecutionException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (TimeoutException ex) {
-        try {
-          serverSocket.close();
-          exec.shutdown();
-        } catch (IOException ex1) {
-          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex1);
-        }
+        System.out.println("waiting for connection");
+        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
+      } catch (IOException ex) {
         Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
       }
     };
+    
     Callable<String> callableTask = () -> {
       TimeUnit.MILLISECONDS.sleep(20);
       return "callable task done";
     };
-    List<Callable<String>> taskList = new ArrayList<>();
-    taskList.add(callableTask);
-    taskList.add(callableTask);
-    taskList.add(callableTask);
+
+    
+    try {
+      while (true) {
+      exec.submit(listen).get(30, TimeUnit.SECONDS);
+      }
+    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
+      Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+      serverSocket.close();
+    }
     
     
-    Future<?> task = exec.submit(serverStart);
+    
     try {
       //exec.invokeAll(taskList);
       System.out.println(exec.submit(callableTask).get());
-      exec.submit(callableTask);
-      exec.submit(callableTask);
-      exec.execute(runnableTask);
       //task.get(30, TimeUnit.SECONDS);
     } catch (InterruptedException ex) {
         //serverSocket.close();
@@ -119,6 +104,7 @@ public class App {
     } catch (ExecutionException ex) {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
     }
+    exec.shutdown();
   }
 }
 

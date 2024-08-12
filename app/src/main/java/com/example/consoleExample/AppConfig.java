@@ -70,7 +70,7 @@ public class AppConfig {
       CommandLineParser parser = new DefaultParser();
       CommandLine cmd;
       HelpFormatter formatter = new HelpFormatter.Builder().get();
-      formatter.printHelp("Command line syntax:", options);
+      //formatter.printHelp("Command line syntax:", options);
       try {
           cmd = parser.parse(options, args);
           if (cmd.hasOption("r")){

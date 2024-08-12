@@ -54,7 +54,7 @@ public class App {
     AppConfig config = new AppConfig();
     Options options = config.configureOptions();
     config.optionsExecution(options, args);
-    ExecutorService exec = Executors.newFixedThreadPool(3);
+    ExecutorService exec = Executors.newFixedThreadPool(4);
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     
@@ -66,18 +66,18 @@ public class App {
       }
     };
     
-    //TODO: make a controlling thread inside of serverStart thread to close server when not used
     
     Callable<Socket> serverTimerCheck = () -> {
       return serverSocket.accept();
     };
+    
     Runnable serverStart = () -> {
       try {
         while (!Thread.currentThread().isInterrupted()){
           System.out.println("waiting for connection");
           Future<Socket> check = exec.submit(serverTimerCheck);
 
-          Future serverTask = exec.submit(new ServerThread(port, serverSocket, check.get(30, TimeUnit.SECONDS)));
+          exec.submit(new ServerThread(port, serverSocket, check.get(30, TimeUnit.SECONDS)));
           
         }
         serverSocket.close();

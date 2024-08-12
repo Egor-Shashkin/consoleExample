@@ -67,7 +67,7 @@ public class Client {
   }
   
   
-  private void getTelemetryMessage(int port){
+  private void getTelemetryMessage(int port, int id){
     Socket clientSocket;
     DataOutputStream out;
     ObjectInputStream in;
@@ -79,7 +79,7 @@ public class Client {
       in = new ObjectInputStream(clientSocket.getInputStream());
       out = new DataOutputStream(clientSocket.getOutputStream());
       System.out.println("sending request");
-      out.writeBytes("get\n");
+      out.writeBytes(String.format("get %s%n", id));
       System.out.println("getting json");
       json = (String) in.readObject();
       System.out.println("parsing json");
@@ -101,7 +101,10 @@ public class Client {
   
   private void executeOptions(CommandLine cmd) throws ParseException{
     if (cmd.hasOption("g")){
-      getTelemetryMessage(cmd.getParsedOptionValue("g"));
+      String[] parsedValues = cmd.getOptionValues("s");
+      int port = Integer.getInteger(parsedValues[0]);
+      int id = Integer.getInteger(parsedValues[1]);
+      getTelemetryMessage(port, id);
     }
     else if (cmd.hasOption("s")){
       String[] parsedValues = cmd.getOptionValues("s");

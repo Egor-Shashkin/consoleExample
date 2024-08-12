@@ -33,6 +33,7 @@ public class GettingClient {
   
   public static void main(String[] args){
     int port = 7777;
+    int id = 3;
     Socket clientSocket;
     DataOutputStream out;
     ObjectInputStream in;
@@ -44,7 +45,7 @@ public class GettingClient {
       in = new ObjectInputStream(clientSocket.getInputStream());
       out = new DataOutputStream(clientSocket.getOutputStream());
       System.out.println("sending request");
-      out.writeBytes("get\n");
+      out.writeBytes(String.format("get %s%n", id));
       System.out.println("getting json");
       json = (String) in.readObject();
       System.out.println("parsing json");

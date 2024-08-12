@@ -19,11 +19,11 @@ public class SendingClient {
   
 
   
-  public static void main(String[] args){
+  public static void main(String[] args) throws IOException{
     int port = 7777;
-    Socket clientSocket;
-    DataOutputStream out;
-    BufferedReader in;
+    Socket clientSocket = null;
+    DataOutputStream out = null;
+    BufferedReader in = null;
     InetAddress host;
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
@@ -37,8 +37,10 @@ public class SendingClient {
       clientSocket.close();
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
-      
     }
+    in.close();
+    out.close();
+    clientSocket.close();
   }
   
 //  public void stopConnection(){

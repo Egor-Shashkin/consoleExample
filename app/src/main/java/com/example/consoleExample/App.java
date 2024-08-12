@@ -20,10 +20,12 @@ import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
+import static java.lang.System.exit;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
@@ -57,23 +59,27 @@ public class App {
     ExecutorService exec = Executors.newFixedThreadPool(4);
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
+    serverSocket.setSoTimeout(30000);
     
-    Runnable runnableTask = () -> {
+    Runnable startServer = () -> {
       try {
-        TimeUnit.MILLISECONDS.sleep(10);
-      } catch (InterruptedException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+      while (true) {
+      System.out.println("waiting for connection");
+      exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
       }
-    };
-    
-    Runnable listen = () -> {
-      try {
-        System.out.println("waiting for connection");
-        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
+      } catch (SocketTimeoutException ex) {
+        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        try {
+          serverSocket.close();
+        } catch (IOException ex1) {
+          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex1);
+          exit(1);
+        }
       } catch (IOException ex) {
         Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
       }
     };
+
     
     Callable<String> callableTask = () -> {
       TimeUnit.MILLISECONDS.sleep(20);
@@ -81,25 +87,24 @@ public class App {
     };
 
     
-    try {
-      while (true) {
-      exec.submit(listen).get(30, TimeUnit.SECONDS);
+    
+    Future<?> runningServer = exec.submit(startServer);
+    
+    
+    for (int i = 0; i < 5; i++){
+      try {
+        TimeUnit.SECONDS.sleep(1);
+      } catch (InterruptedException ex) {
+        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
       }
-    } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-      Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-      serverSocket.close();
+      exec.submit(new ClientThread(port, i));
     }
-    
-    
     
     try {
       //exec.invokeAll(taskList);
       System.out.println(exec.submit(callableTask).get());
-      //task.get(30, TimeUnit.SECONDS);
+      runningServer.get();
     } catch (InterruptedException ex) {
-        //serverSocket.close();
-        //exec.shutdownNow();
-
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
     } catch (ExecutionException ex) {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
@@ -123,7 +128,7 @@ class ServerThread implements Runnable{
   String filePath;
   
 
-  public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket) {
+  public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket) throws IOException {
       this.port = port;
       this.serverSocket = serverSocket;
       this.clientSocket = clientSocket;
@@ -137,12 +142,12 @@ class ServerThread implements Runnable{
     try {
       out = new ObjectOutputStream(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      System.out.println("server: reading input");
+      System.out.printf("T%s: server: reading input %n", Thread.currentThread().getId());
       String[] meta = in.readLine().split(" ");
       
 
       if (meta[0].equals("send")){
-        System.out.println("server: getting values");
+        System.out.printf("T%s: server: getting values %n", Thread.currentThread().getId());
         String json = in.lines().collect(Collectors.joining());
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath + fileName))){
@@ -175,5 +180,26 @@ class ServerThread implements Runnable{
   }
 }
 
+class ClientThread implements Runnable{
+  private int id;
+  private int port;
+  public ClientThread(int port, int id) {
+    this.id = id;
+    this.port = port;
+  }
 
+  @Override
+  public void run() {
+    try {
+      TimeUnit.MILLISECONDS.sleep(300);
+      System.out.printf("starting SlowClient №%s%n", id);
+      new SlowClient(port, id).start();
+    } catch (IOException ex) {
+      Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (InterruptedException ex) {
+      Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
+    }
+  }
+  
+}
 

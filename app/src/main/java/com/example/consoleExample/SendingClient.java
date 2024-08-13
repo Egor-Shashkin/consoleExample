@@ -22,17 +22,17 @@ public class SendingClient {
   public static void main(String[] args) throws IOException{
     int port = 7777;
     Socket clientSocket = null;
-    DataOutputStream out = null;
+    PrintWriter out = null;
     BufferedReader in = null;
     InetAddress host;
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      out = new DataOutputStream(clientSocket.getOutputStream());
+      out = new PrintWriter(clientSocket.getOutputStream());
       TelemetryMessage message = new TelemetryMessage();
       message.generatingSensorData();
       String json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println(json);
-      out.writeBytes("send 3\n" + json);
+      out.print("send 5\n" + json);
       out.flush();
       clientSocket.close();
     } catch (IOException ex) {

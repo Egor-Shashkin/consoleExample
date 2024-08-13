@@ -24,7 +24,6 @@ public class SlowClient {
     this.id = id;
   }
   
-  
 
   
   public void start() throws IOException, InterruptedException{
@@ -35,12 +34,12 @@ public class SlowClient {
     InetAddress host;
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      out = new DataOutputStream(clientSocket.getOutputStream());
       TelemetryMessage message = new TelemetryMessage();
       message.generatingSensorData();
       String json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println("sending data slowly");
-      TimeUnit.SECONDS.sleep(5);
+      TimeUnit.SECONDS.sleep(20);
+      out = new DataOutputStream(clientSocket.getOutputStream());
       out.writeBytes(String.format("send %d%n%s", id, json));
       out.flush();
       clientSocket.close();

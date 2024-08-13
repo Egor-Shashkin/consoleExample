@@ -16,10 +16,12 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -32,22 +34,25 @@ public class GettingClient {
 
   
   public static void main(String[] args){
-    int port = 7777;
-    int id = 3;
-    Socket clientSocket;
-    DataOutputStream out;
-    ObjectInputStream in;
-    InetAddress host;
-    String json;
-    try {
+      int port = 7777;
+      int id = 3;
+      Socket clientSocket;
+      PrintWriter out;
+      ObjectInputStream in;
+      String json;
       System.out.println("connecting to server");
+     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      in = new ObjectInputStream(clientSocket.getInputStream());
-      out = new DataOutputStream(clientSocket.getOutputStream());
-      System.out.println("sending request");
-      out.writeBytes(String.format("get %s%n", id));
+            System.out.println("sending request");
+
+       out = new PrintWriter(clientSocket.getOutputStream(), true);
+       in = new ObjectInputStream(clientSocket.getInputStream());
+      out.print(String.format("get %d%n", id));
+      out.flush();
       System.out.println("getting json");
       json = (String) in.readObject();
+            clientSocket.close();
+
       System.out.println("parsing json");
       JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
 
@@ -56,12 +61,13 @@ public class GettingClient {
       ArrayList<SensorData> data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
       TelemetryMessage message = new TelemetryMessage(timeStamp, deviceId, data);
       System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
-      out.flush();
-      clientSocket.close();
-    } catch (IOException | ClassNotFoundException ex) {
-      Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
+      in.close();
+    } catch (IOException ex) {
+      Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
 
-  
+ 
 }

@@ -48,7 +48,4 @@ public class SlowClient {
     }
     System.out.println("Data sent. Connection closed");
   }
-  
-
-  
 }

@@ -64,12 +64,13 @@ public class ServerThread implements Runnable{
       }
 
       else if (meta[0].equals("get")){
-        fileName = String.format("telemetry_data_%s", meta[1]);
+        fileName = String.format("telemetry_data_%s.json", meta[1]);
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath + fileName))) {
           System.out.println("server: sending values");
           out.writeObject(reader.readLine());
           System.out.println("server: values sent");
         } catch (Exception e) {
+          System.out.println(e);
         }
         
         out.flush();

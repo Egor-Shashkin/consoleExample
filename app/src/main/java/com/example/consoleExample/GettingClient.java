@@ -43,10 +43,10 @@ public class GettingClient {
       System.out.println("connecting to server");
      try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-            System.out.println("sending request");
+      System.out.println("sending request");
 
-       out = new PrintWriter(clientSocket.getOutputStream(), true);
-       in = new ObjectInputStream(clientSocket.getInputStream());
+      out = new PrintWriter(clientSocket.getOutputStream());
+      in = new ObjectInputStream(clientSocket.getInputStream()); //?
       out.print(String.format("get %d%n", id));
       out.flush();
       System.out.println("getting json");

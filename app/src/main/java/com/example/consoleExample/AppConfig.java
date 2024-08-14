@@ -8,7 +8,6 @@ import static com.example.consoleExample.App.jAct;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 import com.my.CustomLib;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -34,7 +33,7 @@ public class AppConfig {
     private ArrayList<String> prop2;
     @Expose
     @SerializedName("pArrayOfArrays")
-    private ArrayList prop3;
+    private ArrayList<ArrayList<String>> prop3;
     @Expose
     @SerializedName("pObject")
     private CustomLib pObj;
@@ -43,7 +42,7 @@ public class AppConfig {
     
     public AppConfig() {
         prop2 = new ArrayList<String>();
-        prop3 = new ArrayList<ArrayList>();
+        prop3 = new ArrayList<ArrayList<String>>();
         pObj = new CustomLib();
     }
     
@@ -57,7 +56,7 @@ public class AppConfig {
         return prop2;
     }
 
-    public Collection getProp3() {
+    public Collection<ArrayList<String>> getProp3() {
         return prop3;
     }
 
@@ -66,7 +65,6 @@ public class AppConfig {
     }
     
     public void optionsExecution(Options options, String[] args){
-      SimpleDateFormat sdf;
       CommandLineParser parser = new DefaultParser();
       CommandLine cmd;
       HelpFormatter formatter = new HelpFormatter.Builder().get();
@@ -87,14 +85,11 @@ public class AppConfig {
           if (cmd.hasOption("c")){
             String countryCode = cmd.getOptionValue("c");
             if (countryCode.equals("KKona")) {
-              sdf = new SimpleDateFormat("MM.dd.yyyy");
             }
             else {
-              sdf = new SimpleDateFormat("dd.MM.yyyy");
             }
+          } else {
           }
-          else
-            sdf = new SimpleDateFormat("dd.MM.yyyy");
 
 
           if(cmd.hasOption("t")) {

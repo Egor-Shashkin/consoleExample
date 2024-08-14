@@ -10,21 +10,16 @@ import static java.lang.System.exit;
 import java.net.ServerSocket;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
-import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.cli.*;
-import com.example.consoleExample.Threads.*;
-import com.google.errorprone.annotations.concurrent.GuardedBy;
-import java.util.Calendar;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.DelayQueue;
 
 
 
@@ -33,9 +28,8 @@ public class App {
   static Gson gson = new GsonBuilder().setPrettyPrinting().create();
   static Scanner scan = new Scanner(System.in);
   static JsonActions jAct = new JsonActions();
-  @GuardedBy("this")
-  private static int reservations = 0;
-  public static final long startTime = Calendar.getInstance().getTimeInMillis();
+  static AtomicInteger reservations = new AtomicInteger(0);
+
     
     
     
@@ -44,63 +38,59 @@ public class App {
     AppConfig config = new AppConfig();
     Options options = config.configureOptions();
     config.optionsExecution(options, args);
+    //when get more connection attempts than max number of server threads it throws SocketException
+    //exec is used for running server
     ExecutorService exec = Executors.newCachedThreadPool();
+    //clientExec is used to artificially make clients
+    ExecutorService clientExec = Executors.newFixedThreadPool(3);
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(15000);
+    Lock lock = new ReentrantLock();
     
     Runnable startServer = () -> {
       while (true) {
-      try {
-      
-      System.out.println(Calendar.getInstance().getTimeInMillis() - startTime + "waiting for connection");
-      exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
-      --reservations;
-      
-      } catch (SocketTimeoutException ex) {
-        if (reservations <= 0 ) {
-        System.out.println(Calendar.getInstance().getTimeInMillis()- startTime + "no new connection attempts detected in last 30 seconds\n"
-                + "shutting down the server");
+        lock.lock();
         try {
-          serverSocket.close();
-          break;
-        } catch (IOException ex1) {
-          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex1);
-          exit(1);
-        } 
-        }else System.out.println(Calendar.getInstance().getTimeInMillis()- startTime + "tried to close server because of timeout. reservations != 0");
 
-      } catch (IOException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-      }
+        System.out.println("waiting for connection");
+        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
+
+        } catch (SocketTimeoutException ex) {
+          if (reservations.get() == 0 ) {
+          System.out.println("no new connection attempts detected in last 30 seconds\n"
+                  + "shutting down the server");
+          try {
+            serverSocket.close();
+            break;
+          } catch (IOException ex1) {
+            Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex1);
+            exit(1);
+          } 
+          }else System.out.printf("tried to close server because of timeout. reservations = %s%n", reservations.get());
+
+        } catch (IOException ex) {
+          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+          lock.unlock();
+        }
       }
     };
 
-    Callable<String> callableTask = () -> {
-      TimeUnit.MILLISECONDS.sleep(20);
-      return "callable task done";
-    };
-
+    
   //------------------------ running program ---------------------------------//
     
-
+    //starting server
     Future<?> runningServer = exec.submit(startServer);
     
+    
+    //artificially adding clients
     for (int i = 0; i < 5; i++){
-      try {
-        TimeUnit.MILLISECONDS.sleep(30); //doesn't work without waiting a bit
-        exec.submit(new ClientThread(port, i));
-        ++reservations;
-      } catch (InterruptedException ex) {
-        Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
-      }
+        clientExec.submit(new ClientThread(port, String.valueOf(i)));
     }
-    //TODO fix overlapping threads
     
-    
+    //checking if server is down then shutting down
     try {
-      //exec.invokeAll(taskList);
-      System.out.println(exec.submit(callableTask).get());
       runningServer.get();
     } catch (InterruptedException ex) {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
@@ -108,6 +98,7 @@ public class App {
       Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
     }
     exec.shutdown();
+    clientExec.shutdown();
   }
 }
 

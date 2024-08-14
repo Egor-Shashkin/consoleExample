@@ -6,30 +6,17 @@ package com.example.consoleExample;
 
 import static com.example.consoleExample.App.gson;
 import static com.example.consoleExample.App.scan;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.TypeAdapter;
-import com.google.gson.stream.JsonReader;
-import com.google.gson.stream.JsonToken;
-import com.google.gson.stream.JsonWriter;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.Writer;
-import java.lang.ProcessBuilder.Redirect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import org.apache.commons.cli.Option;
@@ -63,13 +50,12 @@ public class JsonActions {
       
     public Options ReadJsonOptions(String file){
       Options options = new Options();
-      JsonParser parser = new JsonParser();
       String shortName;
       String longName;
       String desc;
       boolean hasArg;
       try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-        JsonArray array = parser.parse(reader).getAsJsonArray();
+        JsonArray array = JsonParser.parseReader(reader).getAsJsonArray();
         for (JsonElement m : array){
         shortName = m.getAsJsonObject().get("short").getAsString();
         longName = m.getAsJsonObject().get("long").getAsString();
@@ -83,14 +69,11 @@ public class JsonActions {
         System.out.println("something went wrong while reading:\n" + e);
         return null;
       }
-      
-      
     }
     
     
-    @SuppressWarnings("unchecked")
     public void gsonCollectionWrite(String file){
-        Collection collection = new ArrayList();
+        Collection<String> collection = new ArrayList<>();
         String json;
         System.out.print("input collection item or -1 to exit: ");
         String input = scan.nextLine();
@@ -111,9 +94,8 @@ public class JsonActions {
         }
     }
     
-    @SuppressWarnings("unchecked")
     public void gsonCollectionWrite(String file, String json){
-        Collection collection = new ArrayList();
+        Collection<String> collection = new ArrayList<>();
         json = gson.toJson(collection);
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))){
             writer.write(json);
@@ -127,10 +109,6 @@ public class JsonActions {
     }
     
       public void gsonCollectionWrite(String file, Options options){
-        GsonBuilder builder = new GsonBuilder();
-        builder.registerTypeAdapter(Options.class, new OptionsAdapter());
-        builder.registerTypeAdapter(Option.class, new OptionSerializer());
-        builder.registerTypeAdapter(Options.class, new OptionsSerializer());
 
 
 
@@ -153,130 +131,5 @@ public class JsonActions {
     }
         
     
-   public class OptionsAdapter extends TypeAdapter<Options> {
-     JsonParser parser;
-
-    public OptionsAdapter() {
-      this.parser = new JsonParser();
-    }
-     @Override
-     public Options read(JsonReader reader) throws IOException {
-       if (reader.peek() == JsonToken.NULL) {
-         reader.nextNull();
-         return null;
-       }
-       Options options = new Options();
-       String s = reader.nextString();
-       JsonArray array = parser.parseString(s).getAsJsonArray();
-       Option option;
-       String shortname;
-       String longname;
-       boolean hasArg;
-       String desc;
-       for (JsonElement m : array){
-         shortname = m.getAsJsonObject().get("short").getAsString();
-         longname = m.getAsJsonObject().get("long").getAsString();
-         hasArg = m.getAsJsonObject().get("hasArgs").getAsBoolean();
-         desc = m.getAsJsonObject().get("desc").getAsString();
-         options.addOption(shortname, longname, hasArg, desc);
-       }
-       
-       return options;
-     }
-     @Override
-     public void write(JsonWriter writer, Options options) throws IOException {
-      if (options == null) {
-        writer.nullValue();
-        return;
-      } 
-
-      writer.beginArray();
-      for (Option m : options.getOptions()){
-        writer.beginObject();
-        writer.name("short").value(m.getOpt());
-        writer.name("long").value(m.getLongOpt());
-        writer.name("desc").value(m.getDescription());
-        writer.name("hasArgs").value(m.hasArg());
-        writer.endObject();
-      }
-      writer.endArray();
-     }
-   }
-    
-  
-    private class OptionsSerializer implements JsonSerializer<Options> {
-        
-    @Override
-        public JsonElement serialize(Options t, java.lang.reflect.Type type, JsonSerializationContext jsc) {
-          JsonArray result = new JsonArray();
-          for (Option m : t.getOptions()){
-          result.add(gson.toJson(m));
-          }
-          
-          return new JsonPrimitive (gson.toJson(result));
-      }
-    }
-    private class OptionSerializer implements JsonSerializer<Option> {
-
-      @Override
-      public JsonElement serialize(Option t, java.lang.reflect.Type type, JsonSerializationContext jsc) {
-        JsonObject result = new JsonObject();
-        result.add("short", gson.toJsonTree(t.getOpt()));
-        result.add("long", gson.toJsonTree(t.getLongOpt()));
-        result.add("desc", gson.toJsonTree(t.getDescription()));
-        result.add("hasArg", gson.toJsonTree(t.hasArg()));
-
-        return result;
-      }
-    }
-
-    
-//    private class OptionsDeserializer implements JsonDeserializer<Options>{
-//
-//    @Override
-//    public Options deserialize(JsonElement je, java.lang.reflect.Type type, JsonDeserializationContext jdc) throws JsonParseException {
-//      Options result = new Options();
-//      Option m;
-//      
-//      for (JsonElement jsonElement : je.getAsJsonArray()) {
-//        m = jsonElement;
-//        
-//      }
-//      return result;
-//    }
-//      
-//    }
-    
-//    private class OptionSerializer implements JsonSerializer<Option>{
-//
-//      @Override
-//      public JsonElement serialize(Option t, java.lang.reflect.Type type, JsonSerializationContext jsc) {
-//        t.get
-//        
-//      }
-//    }
-//    
-//    private class OptionDeserializer implements JsonDeserializer<Option>{
-//
-//    @Override
-//    public Option deserialize(JsonElement je, java.lang.reflect.Type type, JsonDeserializationContext jdc) throws JsonParseException {
-//      Option option;
-//      JsonPrimitive m;
-//      
-//      for (JsonElement jsonElement : je.getAsJsonArray()) {
-//        
-//      }
-//      
-//      return option;
-//    }
-//  
-//    }
-    
-    
-    
-    
-
-  public JsonActions() {
-  }
     
 }

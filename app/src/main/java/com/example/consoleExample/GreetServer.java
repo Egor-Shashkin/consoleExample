@@ -24,6 +24,7 @@ public class GreetServer {
       clientSocket = serverSocket.accept();
       out = new PrintWriter(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+      
       String greeting = in.readLine();
       if ("hello server".equals(greeting)){
         out.println("hello client");

@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample.Threads;
+package com.example.consoleExample;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -13,12 +13,9 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Calendar;
-import java.util.Date;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
-import com.example.consoleExample.App;
 
 /**
  *
@@ -30,16 +27,20 @@ public class ServerThread implements Runnable{
   ObjectOutputStream out;
   BufferedReader in;
   int port;
+  Integer reservations;
   String fileName;
   String filePath;
+  String[] meta;
+  
   
 
   public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket) throws IOException {
       this.port = port;
       this.serverSocket = serverSocket;
       this.clientSocket = clientSocket;
-      fileName = "telemetry_data_1.json";
+      fileName = "telemetry_data_default.json";
       filePath = "C:\\Users\\Andrei\\Documents\\ConsoleExampleDocs\\";
+      App.reservations.incrementAndGet();
       
   }
   
@@ -48,14 +49,16 @@ public class ServerThread implements Runnable{
     try {
       out = new ObjectOutputStream(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-      Date start_time;
-      System.out.printf(Calendar.getInstance().getTimeInMillis()- App.startTime + "T%s: server: reading input %n", Thread.currentThread().getId());
-      String[] meta = in.readLine().split(" ");
+
+      //reading client input, first line is metadata "command id"
+      System.out.printf("T%s: server: reading input %n", Thread.currentThread().getId());
+      meta = in.readLine().split(" ");
       
 
+      //chosing action according to command
       if (meta[0].equals("send")){
-        System.out.printf(Calendar.getInstance().getTimeInMillis()- App.startTime + "T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
-        String json = in.lines().collect(Collectors.joining());
+        System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
+        String json = in.lines().collect(Collectors.joining("\n"));
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filePath + fileName))){
           writer.write(json);
@@ -67,23 +70,27 @@ public class ServerThread implements Runnable{
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         try (BufferedReader reader = new BufferedReader(new FileReader(filePath + fileName))) {
           System.out.println("server: sending values");
-          out.writeObject(reader.readLine());
+          out.writeObject(reader.lines().collect(Collectors.joining("\n")));
           System.out.println("server: values sent");
         } catch (Exception e) {
           System.out.println(e);
         }
         
         out.flush();
+        out.close();
       }
 
       else {
         out.writeBytes("unknown connection");
         System.out.println("server: meta error");
       }
+    clientSocket.close();
 
     } catch (IOException ex) {
       Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
     }
     
+    //after ending connection decreasing upcoming connections counter
+    App.reservations.decrementAndGet();
   }
 }

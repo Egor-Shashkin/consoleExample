@@ -21,33 +21,26 @@ public class SendingClient {
   
   public static void main(String[] args) throws IOException{
     int port = 7777;
+    String id = "5";
     Socket clientSocket = null;
     PrintWriter out = null;
-    BufferedReader in = null;
-    InetAddress host;
+    
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       out = new PrintWriter(clientSocket.getOutputStream());
-      TelemetryMessage message = new TelemetryMessage();
+      TelemetryMessage message = new TelemetryMessage(id);
       message.generatingSensorData();
       String json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println(json);
-      out.print("send 5\n" + json);
+      out.print(String.format("send %d%n%s", id, json));
       out.flush();
+      out.close();
       clientSocket.close();
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
   
-//  public void stopConnection(){
-//    try {
-//      in.close();
-//      out.close();
-//      clientSocket.close();
-//    } catch (IOException ex) {
-//      Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
-//    }
-//  }
+
   
 }

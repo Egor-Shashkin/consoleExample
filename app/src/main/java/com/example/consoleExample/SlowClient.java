@@ -17,31 +17,32 @@ import java.util.logging.Logger;
  * @author Andrei
  */
 public class SlowClient {
-  private int id;
+  private String id;
   private int port;
-  public SlowClient(int port, int id) {
+  private Socket clientSocket;
+  private DataOutputStream out;
+  private TelemetryMessage message;
+  private String json;
+  
+  public SlowClient(int port, String id) {
     this.port = port;
     this.id = id;
+    message = new TelemetryMessage();
+
   }
   
 
   
   public void start() throws IOException, InterruptedException{
-    
-    Socket clientSocket = null;
-    DataOutputStream out = null;
-    BufferedReader in = null;
-    InetAddress host;
-    try {
+      try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      TelemetryMessage message = new TelemetryMessage();
       message.generatingSensorData();
-      String json = App.gson.toJson(message, TelemetryMessage.class);
+      json = App.gson.toJson(message, TelemetryMessage.class);
       System.out.println("sending data slowly");
       TimeUnit.SECONDS.sleep(20);
       out = new DataOutputStream(clientSocket.getOutputStream());
-      out.writeBytes(String.format("send %d%n%s", id, json));
-      out.flush();
+      out.writeBytes(String.format("send %s%n%s", id, json));
+      out.close();
       clientSocket.close();
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);

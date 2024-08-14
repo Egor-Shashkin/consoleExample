@@ -40,6 +40,12 @@ public class TelemetryMessage {
     this.deviceId = deviceId;
     this.timeStamp = timeStamp;
   }
+  
+  public TelemetryMessage(String deviceId){
+    this.data = new ArrayList<>();
+    this.deviceId = deviceId;
+    this.timeStamp = Calendar.getInstance().getTimeInMillis();
+  }
 
 //  public ArrayList<SensorData> getData() {
 //    return data;

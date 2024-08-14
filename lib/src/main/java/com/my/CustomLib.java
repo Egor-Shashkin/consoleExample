@@ -6,7 +6,7 @@ import java.util.Calendar;
 public class CustomLib implements SomeInterface{
     
     private String identifier;
-    private ArrayList values;
+    private ArrayList<Integer> values;
     
     public CustomLib() {
         identifier = String.format("I'm a String from a lib - %s", Calendar.getInstance().getTime());
@@ -18,7 +18,7 @@ public class CustomLib implements SomeInterface{
         return identifier;
     }
 
-    public ArrayList getValues() {
+    public ArrayList<Integer> getValues() {
         return values;
     }
     

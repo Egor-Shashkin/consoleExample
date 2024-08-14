@@ -32,7 +32,8 @@ public class EchoClient {
     String response = (String) in.readObject();
     System.out.println(response);
     }
-    out.writeObject(".");
+    
+    //out.writeObject(".");
 
 
   }

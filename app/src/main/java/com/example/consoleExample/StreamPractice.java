@@ -4,7 +4,6 @@
  */
 package com.example.consoleExample;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.*;
@@ -21,11 +20,7 @@ public class StreamPractice {
     counter = 0;
     myList = Arrays.asList( 1,5,7,2,3,6,2,6,2,4);
     myStream = myList.stream().distinct();
-    List<String> result = Stream.generate(() -> "a").limit(200)              // Flatten the list of lists into a single stream
-            .map(String::toUpperCase)            // Transform each element to uppercase
-            .sorted()                            // Sort elements
-            .collect(Collectors.toList());
-//    Double avg = 
+
     List<String> result2 = Stream.generate(() -> (Math.round(Math.random()*10)))
             .limit(100)
             .map((n) -> {System.out.println(String.format("map1 - %s", n)); return n.doubleValue();})

@@ -12,7 +12,6 @@ import java.util.Scanner;
  *
  * @author Andrei
  */
-@SuppressWarnings("unchecked")
 public class GsonExample {
     Scanner scan = new Scanner(System.in);
     CustomLib lib = new CustomLib();
@@ -45,10 +44,9 @@ public class GsonExample {
     }
     
     
-    public void fillCollection(Collection collection){
+    public void fillCollection(Collection<Event> collection){
         
-        collection.add("hi");
-        collection.add(5);
+
         for (int i = 0; i<2; i++){
             collection.add(new Event(scan.nextLine()));
         }

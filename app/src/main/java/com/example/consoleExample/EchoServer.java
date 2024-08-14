@@ -13,50 +13,20 @@ import java.util.logging.Logger;
  * @author Andrei
  */
 public class EchoServer {
-    ObjectInputStream in;
-    ObjectOutputStream out;
-    ServerSocket serverSocket;
-    Socket clientSocket;
-    String inputLine;
+    private ObjectInputStream in;
+    private ObjectOutputStream out;
+    private ServerSocket serverSocket;
+    private Socket clientSocket;
+    private String inputLine;
 
-//  public void start(int port) {
-//
-//    try {
-//      serverSocket = new ServerSocket(port);
-//
-//      
-//      String inputLine;
-//      while (true) {
-//        clientSocket = serverSocket.accept();
-//        out = new ObjectOutputStream(clientSocket.getOutputStream());
-//        in = new ObjectInputStream(clientSocket.getInputStream());
-//        inputLine = (String) in.readObject();
-//        if (".".equals(inputLine)){
-//          out.writeObject("good bye");
-//          break;  
-//        }
-//        out.writeObject(inputLine);
-//        
-//        clientSocket.close();
-//        out.close();
-//        in.close();
-//      }
-//    } catch (IOException ex) {
-//      Logger.getLogger(EchoServer.class.getName()).log(Level.SEVERE, null, ex);
-//    } catch (ClassNotFoundException ex) {
-//        Logger.getLogger(EchoServer.class.getName()).log(Level.SEVERE, null, ex);
-//      }
-//  }
-  
+
   public void start(int port) {
 
     try {
-
       serverSocket = new ServerSocket(port);
 
       while (true) {
         clientSocket = serverSocket.accept();
-        
       }
     } catch (IOException ex) {
       Logger.getLogger(EchoServer.class.getName()).log(Level.SEVERE, null, ex);

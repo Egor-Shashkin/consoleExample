@@ -9,7 +9,6 @@ import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.my.SensorData;
 import com.my.TelemetryMessage;
-import java.io.BufferedReader;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -49,8 +48,6 @@ public class Client {
   private void sendTelemetryMessage(int port, int id){
     Socket clientSocket;
     DataOutputStream out;
-    BufferedReader in;
-    InetAddress host;
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       out = new DataOutputStream(clientSocket.getOutputStream());
@@ -71,7 +68,6 @@ public class Client {
     Socket clientSocket;
     DataOutputStream out;
     ObjectInputStream in;
-    InetAddress host;
     String json;
     try {
       System.out.println("connecting to server");

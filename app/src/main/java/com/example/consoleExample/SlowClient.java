@@ -27,7 +27,7 @@ public class SlowClient {
   public SlowClient(int port, String id) {
     this.port = port;
     this.id = id;
-    message = new TelemetryMessage();
+    message = new TelemetryMessage(id);
 
   }
   

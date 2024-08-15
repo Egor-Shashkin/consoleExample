@@ -37,8 +37,8 @@ public class JsonActions {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))){
             config = gson.fromJson(reader, AppConfig.class);
             
-            System.out.printf("String prop1: %s, %n List prop2: %s, %n Array^2: %s, %n Object pObj: %n \t id: %s %n \t values: %s %n",
-                    config.getProp1(), config.getProp2(), config.getProp3(), config.getpObj().getIdentifier(),config.getpObj().getValues());
+            System.out.printf("String prop1: %s, %n List prop2: %s, %n Array^2: %s, %n ",
+                    config.getProp1(), config.getProp2(), config.getProp3());
             
         }
         catch (IOException |JsonIOException |JsonSyntaxException e){

@@ -8,6 +8,7 @@ package com.example.consoleExample;
 import com.my.TelemetryMessage;
 import java.io.*;
 import java.net.*;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,25 +23,32 @@ public class SendingClient {
   public static void main(String[] args) throws IOException{
     int port = 7777;
     String id = "5";
+    
     Socket clientSocket = null;
-    PrintWriter out = null;
+    DataOutputStream out = null;
+    ObjectInputStream in;
+    TelemetryMessage message = new TelemetryMessage(id);
+    String json;
     
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      out = new PrintWriter(clientSocket.getOutputStream());
-      TelemetryMessage message = new TelemetryMessage(id);
       message.generatingSensorData();
-      String json = App.gson.toJson(message, TelemetryMessage.class);
-      System.out.println(json);
-      out.print(String.format("send %d%n%s", id, json));
-      out.flush();
+      json = App.gson.toJson(message, TelemetryMessage.class);
+      System.out.println("waiting for spare server thread");
+      in = new ObjectInputStream(clientSocket.getInputStream());
+      in.readObject();
+      System.out.println("sending data slowly");
+      out = new DataOutputStream(clientSocket.getOutputStream());
+      out.writeBytes(String.format("send %s%n%s", id, json));
       out.close();
       clientSocket.close();
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(SlowClient.class.getName()).log(Level.SEVERE, null, ex);
     }
+    System.out.println("Data sent. Connection closed");
   }
+}
   
 
-  
-}

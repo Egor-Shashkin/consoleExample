@@ -7,7 +7,6 @@ package com.example.consoleExample;
 import static com.example.consoleExample.App.jAct;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.my.CustomLib;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -34,16 +33,12 @@ public class AppConfig {
     @Expose
     @SerializedName("pArrayOfArrays")
     private ArrayList<ArrayList<String>> prop3;
-    @Expose
-    @SerializedName("pObject")
-    private CustomLib pObj;
     
     
     
     public AppConfig() {
         prop2 = new ArrayList<String>();
         prop3 = new ArrayList<ArrayList<String>>();
-        pObj = new CustomLib();
     }
     
     
@@ -60,9 +55,6 @@ public class AppConfig {
         return prop3;
     }
 
-    public CustomLib getpObj() {
-        return pObj;
-    }
     
     public void optionsExecution(Options options, String[] args){
       CommandLineParser parser = new DefaultParser();

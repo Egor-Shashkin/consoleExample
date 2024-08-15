@@ -25,9 +25,7 @@ import java.util.logging.Logger;
  *
  * @author Andrei
  */
-public class GettingClient {
-   
-
+public class GettingAllClient {
   
   public static void main(String[] args){
       int port = 7777;
@@ -51,21 +49,28 @@ public class GettingClient {
         System.out.println("waiting for spare server thread");
         in.readObject();
         System.out.println("sending request");
-        out.print(String.format("get %s%n", id));
+        out.println("getAll");
         out.flush();
         System.out.println("getting json");
         json = (String) in.readObject();
         clientSocket.close();
 
         System.out.println("parsing json");
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+        JsonObject jsonObject;
+        ArrayList<TelemetryMessage> array = new ArrayList<>();
         
 
+        JsonArray jsonArray = JsonParser.parseString(json).getAsJsonArray();
+        for (JsonElement jsonElement : jsonArray){
+          jsonObject = jsonElement.getAsJsonObject();
           timeStamp = jsonObject.get("ts").getAsLong();
           deviceId = jsonObject.get("deviceId").getAsString();
           data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
           message = new TelemetryMessage(timeStamp, deviceId, data);
           System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
+
+          array.add(message);
+        }
         in.close();
         
     } catch (IOException ex) {
@@ -74,5 +79,6 @@ public class GettingClient {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
-}
 
+ 
+}

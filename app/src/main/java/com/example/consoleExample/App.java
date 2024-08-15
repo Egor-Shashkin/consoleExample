@@ -40,9 +40,9 @@ public class App {
     config.optionsExecution(options, args);
     //when get more connection attempts than max number of server threads it throws SocketException
     //exec is used for running server
-    ExecutorService exec = Executors.newCachedThreadPool();
+    ExecutorService exec = Executors.newFixedThreadPool(4);
     //clientExec is used to artificially make clients
-    ExecutorService clientExec = Executors.newFixedThreadPool(3);
+    ExecutorService clientExec = Executors.newFixedThreadPool(5);
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(15000);

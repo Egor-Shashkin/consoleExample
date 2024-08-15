@@ -15,8 +15,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.nio.channels.FileChannel;
+import java.nio.channels.FileLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -35,6 +38,7 @@ public class ServerThread implements Runnable{
   String fileName;
   File filePath;
   String[] meta;
+  File file;
   
   
 
@@ -54,30 +58,42 @@ public class ServerThread implements Runnable{
       out = new ObjectOutputStream(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
-      //reading client input, first line is metadata "command id"
+      
+      out.writeObject("ready");
+      out.flush();
+      
+      //reading client input, first line is metadata "request id"
       System.out.printf("T%s: server: reading input %n", Thread.currentThread().getId());
       meta = in.readLine().split(" ");
       
 
-      //chosing action according to command
+      //choosing action according to command
       if (meta[0].equals("send")){
         System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
         String json = in.lines().collect(Collectors.joining("\n"));
         fileName = String.format("telemetry_data_%s.json", meta[1]);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(new File(filePath, fileName)))){
+        file = new File(filePath, fileName);
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file));
+                FileChannel channel = new RandomAccessFile(file, "rw").getChannel()){
+          //FileLock lock = channel.lock();
           writer.write(json);
         } catch (Exception e) {
+          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
         }
       }
 
       else if (meta[0].equals("get")){
         fileName = String.format("telemetry_data_%s.json", meta[1]);
-        try (BufferedReader reader = new BufferedReader(new FileReader(new File(filePath, fileName)))) {
+        file = new File(filePath, fileName);
+        try (BufferedReader reader = new BufferedReader(new FileReader(file));
+                FileChannel channel = new RandomAccessFile(file, "rw").getChannel()) {
+          //lock breaks GettingClient
+          //FileLock lock = channel.lock();
           System.out.println("server: sending values");
           out.writeObject(reader.lines().collect(Collectors.joining("\n")));
           System.out.println("server: values sent");
         } catch (Exception e) {
-          System.out.println(e);
+          //Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
         }
         
         out.flush();
@@ -86,13 +102,17 @@ public class ServerThread implements Runnable{
       
       else if (meta[0].equals("getAll")){
         JsonArray array = new JsonArray();
-        for (File file : filePath.listFiles()){
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-            array.add(JsonParser.parseReader(reader));
-        } catch (Exception e) {
-          System.out.println(e);
-        }
-        }
+        System.out.println("server: collecting all values");
+          for (File file : filePath.listFiles()){
+            try (BufferedReader reader = new BufferedReader(new FileReader(file));
+                    FileChannel channel = new RandomAccessFile(new File(filePath, fileName), "rw").getChannel()) {
+              FileLock lock = channel.lock();
+              array.add(JsonParser.parseReader(reader));
+            } catch (Exception e) {
+              //Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
+            }
+          }
+        System.out.println("server: sending all values");
         out.writeObject(App.gson.toJson(array));
         out.flush();
         out.close();
@@ -102,13 +122,13 @@ public class ServerThread implements Runnable{
         out.writeBytes("unknown connection");
         System.out.println("server: meta error");
       }
-    clientSocket.close();
+      clientSocket.close();
 
     } catch (IOException ex) {
       Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
     }
     
-    //after ending connection decreasing upcoming connections counter
+    //after ending connection decrease upcoming connections counter
     App.reservations.decrementAndGet();
   }
 }

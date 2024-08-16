@@ -49,14 +49,11 @@ public class SlowClient {
       out.writeBytes(String.format("send %s%n%s", id, json));
       out.close();
       clientSocket.close();
-      System.out.println("Data sent. Connection closed");
-    } catch(SocketException ex) {
-      System.out.println("Could not send data");
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(SlowClient.class.getName()).log(Level.SEVERE, null, ex);
     }
-    
+    System.out.println("Data sent. Connection closed");
   }
 }

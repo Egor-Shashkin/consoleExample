@@ -4,22 +4,15 @@
  */
 package com.example.consoleExample;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonParser;
-import com.my.TelemetryMessage;
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
-import java.io.RandomAccessFile;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
+import java.net.SocketTimeoutException;
+import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -34,18 +27,22 @@ public class ServerThread implements Runnable{
   ObjectOutputStream out;
   BufferedReader in;
   int port;
+  int timeout;
   Integer reservations;
   String fileName;
   File filePath;
   String[] meta;
   File file;
+  FileWorker worker;
   
   
 
-  public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket) throws IOException {
+  public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket, FileWorker worker) throws IOException {
       this.port = port;
       this.serverSocket = serverSocket;
       this.clientSocket = clientSocket;
+      this.worker = worker;
+      timeout = 60000;
       fileName = "telemetry_data_default.json";
       filePath = new File("C:\\Users\\Andrei\\Documents\\ConsoleExampleDocs\\");
       App.reservations.incrementAndGet();
@@ -55,6 +52,7 @@ public class ServerThread implements Runnable{
   @Override
   public void run(){
     try {
+      clientSocket.setSoTimeout(timeout);
       out = new ObjectOutputStream(clientSocket.getOutputStream());
       in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 
@@ -73,49 +71,20 @@ public class ServerThread implements Runnable{
         String json = in.lines().collect(Collectors.joining("\n"));
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         file = new File(filePath, fileName);
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file));
-                FileChannel channel = new RandomAccessFile(file, "rw").getChannel()){
-          //FileLock lock = channel.lock();
-          writer.write(json);
-        } catch (Exception e) {
-          Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
-        }
+        worker.writeFileData(file, json);
       }
 
       else if (meta[0].equals("get")){
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         file = new File(filePath, fileName);
-        try (BufferedReader reader = new BufferedReader(new FileReader(file));
-                FileChannel channel = new RandomAccessFile(file, "rw").getChannel()) {
-          //lock breaks GettingClient
-          //FileLock lock = channel.lock();
-          System.out.println("server: sending values");
-          out.writeObject(reader.lines().collect(Collectors.joining("\n")));
-          System.out.println("server: values sent");
-        } catch (Exception e) {
-          //Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
-        }
-        
-        out.flush();
-        out.close();
+        System.out.println("server: sending values");
+        out.writeObject(worker.getFileData(file));
+        System.out.println("server: values sent");
       }
       
       else if (meta[0].equals("getAll")){
-        JsonArray array = new JsonArray();
-        System.out.println("server: collecting all values");
-          for (File file : filePath.listFiles()){
-            try (BufferedReader reader = new BufferedReader(new FileReader(file));
-                    FileChannel channel = new RandomAccessFile(new File(filePath, fileName), "rw").getChannel()) {
-              FileLock lock = channel.lock();
-              array.add(JsonParser.parseReader(reader));
-            } catch (Exception e) {
-              //Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, e);
-            }
-          }
-        System.out.println("server: sending all values");
-        out.writeObject(App.gson.toJson(array));
-        out.flush();
-        out.close();
+        
+        out.writeObject(worker.getAllFileData(filePath));
       }
 
       else {
@@ -124,11 +93,22 @@ public class ServerThread implements Runnable{
       }
       clientSocket.close();
 
+    } catch (SocketTimeoutException ex) {
+      System.out.printf("waiting socket input time exceed %s%nTerminating connection%n", TimeUnit.MILLISECONDS.toSeconds(timeout));
     } catch (IOException ex) {
       Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+    } finally {
+      try {
+        out.close();
+        in.close();
+        clientSocket.close();
+      } catch (IOException ex) {
+        Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
+        return;
+      }
+      //after ending connection decrease upcoming connections counter
+      App.reservations.decrementAndGet();
     }
     
-    //after ending connection decrease upcoming connections counter
-    App.reservations.decrementAndGet();
   }
 }

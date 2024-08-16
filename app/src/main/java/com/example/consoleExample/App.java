@@ -46,6 +46,7 @@ public class App {
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(15000);
+    FileWorker worker = new FileWorker();
     Lock lock = new ReentrantLock();
     
     Runnable startServer = () -> {
@@ -54,7 +55,7 @@ public class App {
         try {
 
         System.out.println("waiting for connection");
-        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
+        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept(), worker));
 
         } catch (SocketTimeoutException ex) {
           if (reservations.get() == 0 ) {

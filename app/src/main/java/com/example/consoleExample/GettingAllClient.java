@@ -72,6 +72,8 @@ public class GettingAllClient {
           array.add(message);
         }
         in.close();
+        out.close();
+        clientSocket.close();
         
     } catch (IOException ex) {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);

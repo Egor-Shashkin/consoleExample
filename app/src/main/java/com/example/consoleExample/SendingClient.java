@@ -40,6 +40,7 @@ public class SendingClient {
       System.out.println("sending data slowly");
       out = new DataOutputStream(clientSocket.getOutputStream());
       out.writeBytes(String.format("send %s%n%s", id, json));
+      in.close();
       out.close();
       clientSocket.close();
       System.out.println("Data sent. Connection closed");

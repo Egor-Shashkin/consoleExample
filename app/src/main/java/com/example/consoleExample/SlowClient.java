@@ -47,8 +47,11 @@ public class SlowClient {
       TimeUnit.SECONDS.sleep(10);
       out = new DataOutputStream(clientSocket.getOutputStream());
       out.writeBytes(String.format("send %s%n%s", id, json));
+      in.close();
       out.close();
       clientSocket.close();
+    } catch (SocketException ex) {
+      System.out.println("Could not send data");
     } catch (IOException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
     } catch (ClassNotFoundException ex) {

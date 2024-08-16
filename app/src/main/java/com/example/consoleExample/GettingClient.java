@@ -62,12 +62,13 @@ public class GettingClient {
         JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
         
 
-          timeStamp = jsonObject.get("ts").getAsLong();
-          deviceId = jsonObject.get("deviceId").getAsString();
-          data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
-          message = new TelemetryMessage(timeStamp, deviceId, data);
-          System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
+        timeStamp = jsonObject.get("ts").getAsLong();
+        deviceId = jsonObject.get("deviceId").getAsString();
+        data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
+        message = new TelemetryMessage(timeStamp, deviceId, data);
+        System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
         in.close();
+        out.close();
         
     } catch(SocketException ex) {
       System.out.println("Could not send data");

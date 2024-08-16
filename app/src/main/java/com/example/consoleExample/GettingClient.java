@@ -16,6 +16,7 @@ import java.io.ObjectInputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
@@ -68,6 +69,8 @@ public class GettingClient {
           System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
         in.close();
         
+    } catch(SocketException ex) {
+      System.out.println("Could not send data");
     } catch (IOException ex) {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     } catch (ClassNotFoundException ex) {

@@ -14,6 +14,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -44,8 +45,10 @@ public class App {
     //clientExec is used to artificially make clients
     ExecutorService clientExec = Executors.newFixedThreadPool(5);
     Integer port = 7777;
+    int serverTimeout = 15000;
     ServerSocket serverSocket = new ServerSocket(port);
-    serverSocket.setSoTimeout(15000);
+    serverSocket.setSoTimeout(serverTimeout);
+    FileWorker worker = new FileWorker();
     Lock lock = new ReentrantLock();
     
     Runnable startServer = () -> {
@@ -54,12 +57,12 @@ public class App {
         try {
 
         System.out.println("waiting for connection");
-        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept()));
+        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept(), worker));
 
         } catch (SocketTimeoutException ex) {
           if (reservations.get() == 0 ) {
-          System.out.println("no new connection attempts detected in last 30 seconds\n"
-                  + "shutting down the server");
+          System.out.printf("no new connection attempts detected in last %s seconds%n"
+                  + "shutting down the server", TimeUnit.MILLISECONDS.toSeconds(serverTimeout));
           try {
             serverSocket.close();
             break;

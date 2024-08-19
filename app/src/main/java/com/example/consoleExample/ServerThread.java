@@ -28,7 +28,6 @@ public class ServerThread implements Runnable{
   BufferedReader in;
   int port;
   int timeout;
-  Integer reservations;
   String fileName;
   File filePath;
   String[] meta;
@@ -37,9 +36,7 @@ public class ServerThread implements Runnable{
   
   
 
-  public ServerThread(int port, ServerSocket serverSocket, Socket clientSocket, FileWorker worker) throws IOException {
-      this.port = port;
-      this.serverSocket = serverSocket;
+  public ServerThread(Socket clientSocket, FileWorker worker) throws IOException {
       this.clientSocket = clientSocket;
       this.worker = worker;
       timeout = 60000;
@@ -66,6 +63,8 @@ public class ServerThread implements Runnable{
       
 
       //choosing action according to command
+      
+      //TODO: write a protocol to parse client-server communication
       if (meta[0].equals("send")){
         System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
         String json = in.lines().collect(Collectors.joining("\n"));

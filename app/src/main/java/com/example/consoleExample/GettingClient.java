@@ -18,9 +18,13 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
+import javax.swing.JFrame;
 
 /**
  *
@@ -31,45 +35,52 @@ public class GettingClient {
 
   
   public static void main(String[] args){
-      int port = 7777;
-      int id = 3;
-      Socket clientSocket;
-      PrintWriter out;
-      ObjectInputStream in;
-      String json;
-      long timeStamp;
-      String deviceId;
-      ArrayList<SensorData> data;
-      TelemetryMessage message;
+    int port = 7777;
+    int id = 3;
+    long timeStamp;
+    Socket clientSocket;
+    PrintWriter out;
+    ObjectInputStream in;
+    String json;
+    String deviceId;
+    ArrayList<SensorData> data;
+    TelemetryMessage message;
+    ArrayList<Double[]> fOmega = null;
+    ArrayList<Double[]> fTime = null;
+    ArrayList<Double> fTimeRe;
 
-      System.out.println("connecting to server");
-      try {
-        clientSocket = new Socket(InetAddress.getLocalHost(), port);
-        
-        out = new PrintWriter(clientSocket.getOutputStream());
-        in = new ObjectInputStream(clientSocket.getInputStream());
-        
-        System.out.println("waiting for spare server thread");
-        in.readObject();
-        System.out.println("sending request");
-        out.print(String.format("get %s%n", id));
-        out.flush();
-        System.out.println("getting json");
-        json = (String) in.readObject();
-        clientSocket.close();
+    System.out.println("connecting to server");
+    try {
+      clientSocket = new Socket(InetAddress.getLocalHost(), port);
 
-        System.out.println("parsing json");
-        JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
-        
+      out = new PrintWriter(clientSocket.getOutputStream());
+      in = new ObjectInputStream(clientSocket.getInputStream());
 
-        timeStamp = jsonObject.get("ts").getAsLong();
-        deviceId = jsonObject.get("deviceId").getAsString();
-        data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
-        message = new TelemetryMessage(timeStamp, deviceId, data);
-        System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
-        in.close();
-        out.close();
-        
+      System.out.println("waiting for spare server thread");
+      in.readObject();
+      System.out.println("sending request");
+      out.print(String.format("get %s%n", id));
+      out.flush();
+      System.out.println("getting json");
+      json = (String) in.readObject();
+      clientSocket.close();
+
+      System.out.println("parsing json");
+      JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+
+
+      timeStamp = jsonObject.get("ts").getAsLong();
+      deviceId = jsonObject.get("deviceId").getAsString();
+      data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
+      fOmega = (ArrayList<Double[]>) data.stream().map(SensorData::getValue).collect(Collectors.toList());
+      message = new TelemetryMessage(timeStamp, deviceId, data);
+      System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",
+                message.getDeviceId(), message.getTimeStamp(),
+                message.processingSensorData(SensorData::getValue).stream()
+                        .map(s -> Arrays.toString(s))
+                        .collect(Collectors.toList()));        in.close();
+      out.close();
+
     } catch(SocketException ex) {
       System.out.println("Could not send data");
     } catch (IOException ex) {
@@ -77,6 +88,15 @@ public class GettingClient {
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
+    
+    fTime = FourierTransformer.inverseDiscreteTransform(fOmega);
+    fTimeRe = (ArrayList<Double>) fTime.stream().map(x -> x[0]).collect(Collectors.toList());
+    JFrame frame = new JFrame();
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.add(new Plotter(fTimeRe));
+    frame.setSize(400,400);
+    frame.setLocation(200, 200);
+    frame.setVisible(true);
   }
 }
 

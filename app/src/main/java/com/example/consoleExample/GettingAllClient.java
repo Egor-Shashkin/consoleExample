@@ -17,9 +17,11 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 /**
  *
@@ -29,7 +31,6 @@ public class GettingAllClient {
   
   public static void main(String[] args){
       int port = 7777;
-      int id = 3;
       Socket clientSocket;
       PrintWriter out;
       ObjectInputStream in;
@@ -67,7 +68,11 @@ public class GettingAllClient {
           deviceId = jsonObject.get("deviceId").getAsString();
           data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
           message = new TelemetryMessage(timeStamp, deviceId, data);
-          System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
+          System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",
+                  message.getDeviceId(), message.getTimeStamp(),
+                  message.processingSensorData(SensorData::getValue).stream()
+                          .map(s -> Arrays.toString(s))
+                          .collect(Collectors.toList()));
 
           array.add(message);
         }

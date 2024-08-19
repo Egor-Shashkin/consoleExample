@@ -29,8 +29,7 @@ import java.util.stream.Collectors;
 public class FileWorker {
   private BufferedReader reader;
   private String result;
-  private String json;
-  private Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
   
   public FileWorker() {
   }

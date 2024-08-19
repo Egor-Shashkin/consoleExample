@@ -86,7 +86,7 @@ public class Client {
       ArrayList<SensorData> data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
       TelemetryMessage message = new TelemetryMessage(timeStamp, deviceId, data);
       System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s"
-              ,message.getDeviceId(), message.getTimeStamp(), message.processingSencorData(SensorData::getValue));
+              ,message.getDeviceId(), message.getTimeStamp(), message.processingSensorData(SensorData::getValue));
       out.flush();
       clientSocket.close();
     } catch (IOException | ClassNotFoundException ex) {

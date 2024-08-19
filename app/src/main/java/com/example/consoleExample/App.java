@@ -32,7 +32,8 @@ public class App {
 
     
     
-    
+    //TODO: add tests for SendingClient, GettingClient, SlowClient, GettingAllClient
+  
   public static void main(String[] args) throws IOException {
   //--------------------- initializing variables -----------------------------//
     AppConfig config = new AppConfig();
@@ -47,15 +48,15 @@ public class App {
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(15000);
     FileWorker worker = new FileWorker();
-    Lock lock = new ReentrantLock();
     
     Runnable startServer = () -> {
       while (true) {
-        lock.lock();
+        //removed lock, might cause some troubles
+        //lock.lock();
         try {
 
         System.out.println("waiting for connection");
-        exec.submit(new ServerThread(port, serverSocket, serverSocket.accept(), worker));
+        exec.submit(new ServerThread(serverSocket.accept(), worker));
 
         } catch (SocketTimeoutException ex) {
           if (reservations.get() == 0 ) {
@@ -73,7 +74,7 @@ public class App {
         } catch (IOException ex) {
           Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-          lock.unlock();
+          //lock.unlock();
         }
       }
     };

@@ -17,18 +17,18 @@ public class SensorData {
   private String id;
   @Expose
   @SerializedName("value")
-  private Double value;
+  private Double[] value;
   
   public SensorData(){
     
   }
   
-  public SensorData(String id, Double value){
+  public SensorData(String id, Double[] value){
     this.id = id;
     this.value = value;
   }
 
-  public Double getValue() {
+  public Double[] getValue() {
     return value;
   }
 

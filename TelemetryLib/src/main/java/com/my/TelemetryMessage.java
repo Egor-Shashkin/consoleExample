@@ -59,13 +59,13 @@ public class TelemetryMessage {
     return timeStamp;
   }
   
-  public List<Double> processingSencorData(Function<SensorData, Double> function){
+  public List<Double[]> processingSensorData(Function<SensorData, Double[]> function){
     return data.stream().map(function::apply).collect(Collectors.toList());
   }
   
   public void generatingSensorData(){
     for (int i = 0; i < 10; i++){
-      data.add(new SensorData(String.format("Sensor_%s", i), Math.random()));
+      data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{Math.random(), Math.random(), Math.random()}));
     }
   }
 }

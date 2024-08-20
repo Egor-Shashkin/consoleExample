@@ -25,6 +25,7 @@ import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JFrame;
 import com.myUtility.*;
+import java.util.HashMap;
 import java.util.stream.Stream;
 
 /**
@@ -49,7 +50,7 @@ public class GettingClient {
     TelemetryMessage message;
     final ArrayList<Double[]> fOmega;
     ArrayList<Double[]> fTime = null;
-    ArrayList<Double> fTimeRe;
+    HashMap<Double, Double> fTimeRe;
     FourierTransformer transform = new FourierTransformer();
 
     System.out.println("connecting to server");
@@ -87,13 +88,18 @@ public class GettingClient {
 
     
     
-    fTimeRe = (ArrayList<Double>) Stream.iterate(-20.0, i -> i + 1.0).limit(20).map(x -> transform.inverseFourierSeries(fOmega, x)).collect(Collectors.toList());
-    JFrame frame = new JFrame();
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.add(new Plotter(fTimeRe));
-    frame.setSize(400,400);
-    frame.setLocation(200, 200);
-    frame.setVisible(true);
+    fTimeRe = new HashMap<>();
+    Stream.iterate(-20.0, i -> i + 0.1).limit(1000).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x)));
+    
+    Plotter plot = new Plotter("Title", "Title", fTimeRe);
+    plot.pack();
+    plot.setVisible(true);
+//    JFrame frame = new JFrame();
+//    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//    frame.add(new Plotter("title", "title", fTimeRe));
+//    frame.setSize(400,400);
+//    frame.setLocation(200, 200);
+//    frame.setVisible(true);
     } catch(SocketException ex) {
       System.out.println("Could not send data");
     } catch (IOException ex) {

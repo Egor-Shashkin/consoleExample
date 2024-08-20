@@ -10,13 +10,26 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Line2D;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.PlotOrientation;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.ui.ApplicationFrame;
+import org.jfree.data.category.DefaultCategoryDataset;
+import org.jfree.data.xy.XYDataset;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 
 /**
  *
  * @author Andrei
  */
-public class Plotter extends JPanel{
-  private ArrayList<Double> cord;
+public class Plotter extends ApplicationFrame{
+  private HashMap<Double, Double> cord;
   private int marg;
   private int width;
   private int height;
@@ -24,29 +37,44 @@ public class Plotter extends JPanel{
   private double x1;
   private double y1;
 
-  public Plotter() {
-    cord = new ArrayList<>();
-    cord.add(65.0);
-    cord.add(20.0);
-    cord.add(60.0);
-    cord.add(80.0);
-    marg = 60;
-    width = 300;
-    height = 100;
-    max = 80;
-  }
 
-  public Plotter(ArrayList<Double> cord) {
-    this.cord = cord;
-    marg = 60;
-    width = 300;
-    height = 300;
-    max = Collections.max(cord);
+
+  public Plotter(String applicationTitle, String chartTitle, HashMap<Double, Double> cord) {
+      super(applicationTitle);
+      marg = 60;
+      width = 300;
+      height = 300;
+      max = Collections.max(cord.entrySet(), Map.Entry.comparingByValue()).getValue();
+      JFreeChart xylineChart = ChartFactory.createXYLineChart(
+         chartTitle,
+         "x",
+         "f(x)",
+         createDataset(cord));
+         
+      ChartPanel chartPanel = new ChartPanel(xylineChart);
+      chartPanel.setPreferredSize( new java.awt.Dimension(width, height));
+      final XYPlot plot = xylineChart.getXYPlot();
+      
+      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+      renderer.setSeriesPaint(0, Color.RED);
+      renderer.setSeriesStroke(0, new BasicStroke());
+      renderer.setDefaultShapesVisible(false);
+      plot.setRenderer(renderer); 
+      setContentPane(chartPanel); 
+   }
+  
+  private XYDataset createDataset(HashMap<Double, Double> list){
+    XYSeries dataset = new XYSeries("plot");
+    for (var item : list.entrySet()) {
+      dataset.add(item.getKey(), item.getValue());
+    }
+    
+    return new XYSeriesCollection(dataset);
   }
   
   
   
-  protected void paintComponent(Graphics grf){
+  /*protected void paintComponent(Graphics grf){
     double x0;
     double y0;
     super.paintComponent(grf);
@@ -72,6 +100,6 @@ public class Plotter extends JPanel{
       y0 = y1;
       x0 = x1;
     }
-  }
+  }*/
   
 }

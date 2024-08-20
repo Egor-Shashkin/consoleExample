@@ -61,8 +61,8 @@ public class App {
 
         } catch (SocketTimeoutException ex) {
           if (reservations.get() == 0 ) {
-          System.out.println("no new connection attempts detected in last 30 seconds\n"
-                  + "shutting down the server");
+          System.out.printf("no new connection attempts detected in last %s seconds%n"
+                  + "shutting down the server%n", timeout);
           try {
             serverSocket.close();
             break;

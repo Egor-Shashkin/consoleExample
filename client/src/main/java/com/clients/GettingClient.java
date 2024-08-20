@@ -2,10 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.clients;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -19,24 +19,26 @@ import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import javax.swing.JFrame;
+import com.myUtility.*;
+import java.util.stream.Stream;
 
 /**
  *
  * @author Andrei
  */
 public class GettingClient {
+  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
    
 
   
   public static void main(String[] args){
     int port = 7777;
-    int id = 3;
+    int id = 5;
     long timeStamp;
     Socket clientSocket;
     PrintWriter out;
@@ -45,9 +47,10 @@ public class GettingClient {
     String deviceId;
     ArrayList<SensorData> data;
     TelemetryMessage message;
-    ArrayList<Double[]> fOmega = null;
+    final ArrayList<Double[]> fOmega;
     ArrayList<Double[]> fTime = null;
     ArrayList<Double> fTimeRe;
+    FourierTransformer transform = new FourierTransformer();
 
     System.out.println("connecting to server");
     try {
@@ -71,16 +74,26 @@ public class GettingClient {
 
       timeStamp = jsonObject.get("ts").getAsLong();
       deviceId = jsonObject.get("deviceId").getAsString();
-      data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
+      data = gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
       fOmega = (ArrayList<Double[]>) data.stream().map(SensorData::getValue).collect(Collectors.toList());
       message = new TelemetryMessage(timeStamp, deviceId, data);
       System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",
                 message.getDeviceId(), message.getTimeStamp(),
                 message.processingSensorData(SensorData::getValue).stream()
                         .map(s -> Arrays.toString(s))
-                        .collect(Collectors.toList()));        in.close();
+                        .collect(Collectors.toList()));
+      in.close();
       out.close();
 
+    
+    
+    fTimeRe = (ArrayList<Double>) Stream.iterate(-20.0, i -> i + 1.0).limit(20).map(x -> transform.inverseFourierSeries(fOmega, x)).collect(Collectors.toList());
+    JFrame frame = new JFrame();
+    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    frame.add(new Plotter(fTimeRe));
+    frame.setSize(400,400);
+    frame.setLocation(200, 200);
+    frame.setVisible(true);
     } catch(SocketException ex) {
       System.out.println("Could not send data");
     } catch (IOException ex) {
@@ -88,15 +101,6 @@ public class GettingClient {
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
-    
-    fTime = FourierTransformer.inverseDiscreteTransform(fOmega);
-    fTimeRe = (ArrayList<Double>) fTime.stream().map(x -> x[0]).collect(Collectors.toList());
-    JFrame frame = new JFrame();
-    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-    frame.add(new Plotter(fTimeRe));
-    frame.setSize(400,400);
-    frame.setLocation(200, 200);
-    frame.setVisible(true);
   }
 }
 

@@ -7,6 +7,7 @@ package com.example.consoleExample;
 import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import com.clients.*;
 
 /**
  *

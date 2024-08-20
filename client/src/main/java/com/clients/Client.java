@@ -2,13 +2,16 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.clients;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.my.SensorData;
 import com.my.TelemetryMessage;
+import com.myUtility.JsonActions;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -29,6 +32,7 @@ import org.apache.commons.cli.ParseException;
  * @author Andrei
  */
 public class Client {
+  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
   
   public static void main(String[] args) {
     
@@ -53,7 +57,7 @@ public class Client {
       out = new DataOutputStream(clientSocket.getOutputStream());
       TelemetryMessage message = new TelemetryMessage();
       message.generatingSensorData();
-      String json = App.gson.toJson(message, TelemetryMessage.class);
+      String json = gson.toJson(message, TelemetryMessage.class);
       System.out.println(json);
       out.writeBytes(String.format("send %d%n%s", id, json));
       out.flush();
@@ -83,7 +87,7 @@ public class Client {
 
       long timeStamp = jsonObject.get("ts").getAsLong();
       String deviceId = jsonObject.get("deviceId").getAsString();
-      ArrayList<SensorData> data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
+      ArrayList<SensorData> data = gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
       TelemetryMessage message = new TelemetryMessage(timeStamp, deviceId, data);
       System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s"
               ,message.getDeviceId(), message.getTimeStamp(), message.processingSensorData(SensorData::getValue));

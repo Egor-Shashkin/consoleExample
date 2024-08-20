@@ -5,6 +5,7 @@ package com.example.consoleExample;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.myUtility.JsonActions;
 import java.io.IOException;
 import static java.lang.System.exit;
 import java.net.ServerSocket;
@@ -15,8 +16,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.cli.*;
@@ -39,14 +38,16 @@ public class App {
     AppConfig config = new AppConfig();
     Options options = config.configureOptions();
     config.optionsExecution(options, args);
+
     //when get more connection attempts than max number of server threads it throws SocketException
     //exec is used for running server
     ExecutorService exec = Executors.newFixedThreadPool(4);
     //clientExec is used to artificially make clients
     ExecutorService clientExec = Executors.newFixedThreadPool(5);
+    Integer timeout = 180000;
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
-    serverSocket.setSoTimeout(15000);
+    serverSocket.setSoTimeout(timeout);
     FileWorker worker = new FileWorker();
     
     Runnable startServer = () -> {

@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.myUtility;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,6 +47,8 @@ public class Plotter extends JPanel{
   
   
   protected void paintComponent(Graphics grf){
+    double x0;
+    double y0;
     super.paintComponent(grf);
     Graphics2D graph = (Graphics2D) grf;
     
@@ -59,12 +61,16 @@ public class Plotter extends JPanel{
     double scale = (double)(height-2*marg)/max;
     
     graph.setPaint(Color.RED);
-    
+    x0 = marg;
+    y0 = height-marg-scale*cord.get(0);
     for (int i = 0; i < cord.size(); i++){
       x1 = marg + i*x;
       y1 = height-marg-scale*cord.get(i);
       
       graph.fill(new Ellipse2D.Double(x1-2, y1-2, 4, 4));
+      graph.draw(new Line2D.Double(x0, y0, x1, y1));
+      y0 = y1;
+      x0 = x1;
     }
   }
   

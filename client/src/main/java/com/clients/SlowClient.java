@@ -2,9 +2,11 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.clients;
 
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.my.TelemetryMessage;
 
 import java.io.*;
@@ -25,6 +27,7 @@ public class SlowClient {
   private ObjectInputStream in;
   private TelemetryMessage message;
   private String json;
+  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
   
   public SlowClient(int port, String id) {
     this.port = port;
@@ -39,7 +42,7 @@ public class SlowClient {
       try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       message.generatingSensorData();
-      json = App.gson.toJson(message, TelemetryMessage.class);
+      json = gson.toJson(message, TelemetryMessage.class);
       System.out.println("waiting for spare server thread");
       in = new ObjectInputStream(clientSocket.getInputStream());
       in.readObject();

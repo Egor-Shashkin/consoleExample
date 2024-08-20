@@ -2,8 +2,10 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.clients;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -28,6 +30,7 @@ import java.util.stream.Collectors;
  * @author Andrei
  */
 public class GettingAllClient {
+  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
   
   public static void main(String[] args){
       int port = 7777;
@@ -66,7 +69,7 @@ public class GettingAllClient {
           jsonObject = jsonElement.getAsJsonObject();
           timeStamp = jsonObject.get("ts").getAsLong();
           deviceId = jsonObject.get("deviceId").getAsString();
-          data = App.gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
+          data = gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
           message = new TelemetryMessage(timeStamp, deviceId, data);
           System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",
                   message.getDeviceId(), message.getTimeStamp(),

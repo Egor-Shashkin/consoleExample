@@ -15,7 +15,11 @@ plugins {
 rootProject.name = 'consoleExample'
 include('app')
 include('telemetrylib')
+include('client')
+include('myUtility')
 project(':telemetrylib').projectDir = new File(settingsDir, './telemetrylib')
+project(':client').projectDir = new File(settingsDir, './client')
+project(':myUtility').projectDir = new File(settingsDir, './myUtility')
 
 includeBuild('gradle/license-plugin')
 println('SETTINGS FILE: This is executed during the initialization phase')

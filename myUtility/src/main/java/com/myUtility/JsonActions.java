@@ -2,16 +2,14 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.myUtility;
 
-import static com.example.consoleExample.App.gson;
-import static com.example.consoleExample.App.scan;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
-import com.google.gson.JsonIOException;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.JsonSyntaxException;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.FileReader;
@@ -19,6 +17,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Scanner;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
@@ -27,25 +26,8 @@ import org.apache.commons.cli.Options;
  * @author Andrei
  */
 public class JsonActions {
-      public void gsonCollectionRead(String file){
-        AppConfig config;
-//        Collection collection = new ArrayList();
-//        a.fillCollection(collection);
-//        String json = gson.toJson(collection);
-//        System.out.println("raw json: " + json);
-        
-        try (BufferedReader reader = new BufferedReader(new FileReader(file))){
-            config = gson.fromJson(reader, AppConfig.class);
-            
-            System.out.printf("String prop1: %s, %n List prop2: %s, %n Array^2: %s, %n ",
-                    config.getProp1(), config.getProp2(), config.getProp3());
-            
-        }
-        catch (IOException |JsonIOException |JsonSyntaxException e){
-            System.out.println("Something went wrong while reading");
-        }
-        
-    }
+  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  private static Scanner scan = new Scanner(System.in);
       
       
     public Options ReadJsonOptions(String file){

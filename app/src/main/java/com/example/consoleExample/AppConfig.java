@@ -63,9 +63,6 @@ public class AppConfig {
       //formatter.printHelp("Command line syntax:", options);
       try {
           cmd = parser.parse(options, args);
-          if (cmd.hasOption("r")){
-            jAct.gsonCollectionRead(cmd.getOptionValue("r"));
-          }
           if (cmd.hasOption("w")){
             jAct.gsonCollectionWrite(cmd.getOptionValue("w"));
           }

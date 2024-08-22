@@ -70,6 +70,7 @@ public class ServerThread implements Runnable{
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         file = new File(filePath, fileName);
         worker.writeFileData(file, json);
+        out.writeObject("done");
       }
 
       else if (meta[0].equals(ConnectionMode.GET.name())){

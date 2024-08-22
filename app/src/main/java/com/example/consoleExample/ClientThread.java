@@ -14,8 +14,8 @@ import com.clients.*;
  * @author Andrei
  */
 public class ClientThread implements Runnable{
-  private String id;
-  private int port;
+  private final String id;
+  private final int port;
   
   public ClientThread(int port, String id) {
     this.id = id;
@@ -27,9 +27,7 @@ public class ClientThread implements Runnable{
     try {
       System.out.printf("starting SlowClient n.%s%n", id);
       new SlowClient(port, id).start();
-    } catch (IOException ex) {
-      Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (InterruptedException ex) {
+    } catch (IOException | InterruptedException ex) {
       Logger.getLogger(ClientThread.class.getName()).log(Level.SEVERE, null, ex);
     }
   }

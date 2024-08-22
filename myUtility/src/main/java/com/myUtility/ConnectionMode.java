@@ -11,8 +11,6 @@ package com.myUtility;
 public enum ConnectionMode{
   GET,
   GETALL,
-  SEND;
-
- 
+  SEND
 }
     

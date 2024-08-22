@@ -6,28 +6,20 @@ package com.clients;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.reflect.TypeToken;
 import com.telemetry.SensorData;
 import com.telemetry.TelemetryMessage;
 import com.myUtility.Protocol;
 import com.myUtility.ConnectionMode;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import java.util.stream.Collectors;
-import javax.swing.JFrame;
 import com.myUtility.*;
 import java.util.HashMap;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -42,72 +34,33 @@ public class GettingClient {
   public static void main(String[] args){
     int port = 7777;
     String id = "5";
-    long timeStamp;
     Socket clientSocket;
-    PrintWriter out;
-    ObjectInputStream in;
     String json;
-    String deviceId;
-    ArrayList<SensorData> data;
     TelemetryMessage message;
     final ArrayList<Double[]> fOmega;
-    ArrayList<Double[]> fTime = null;
     HashMap<Double, Double> fTimeRe;
     FourierTransformer transform = new FourierTransformer();
 
-    System.out.println("connecting to server");
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-
-      out = new PrintWriter(clientSocket.getOutputStream());
-      in = new ObjectInputStream(clientSocket.getInputStream());
-
-      System.out.println("waiting for spare server thread");
-      in.readObject();
-      System.out.println("sending request");
-      //out.print(String.format("get %s%n", id));
-      out.print(new Protocol(ConnectionMode.GET, id).connectionMessage());
-      out.flush();
-      System.out.println("getting json");
-      json = (String) in.readObject();
-      clientSocket.close();
-
+      Protocol protocol = new Protocol(ConnectionMode.GET, id);
+      json = protocol.connect(clientSocket);
       System.out.println("parsing json");
-      JsonObject jsonObject = JsonParser.parseString(json).getAsJsonObject();
+      message = TelemetryParser.parseTelemetryJson(json, true);
+      //fOmega = (ArrayList<Double[]>) message.processingSensorData(SensorData::getValue);
+      fTimeRe = new HashMap<>();
+      int range = 5;
+      double step = 0.0005;
+      fOmega = transform.FourierSeries("x", range);
 
+      Stream.iterate((double) -range, i -> i + step).limit(Math.round(2*range/step)).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x, range)));
 
-      timeStamp = jsonObject.get("ts").getAsLong();
-      deviceId = jsonObject.get("deviceId").getAsString();
-      data = gson.fromJson(jsonObject.get("data").getAsJsonArray(), new TypeToken<List<SensorData>>(){}.getType());
-      fOmega = (ArrayList<Double[]>) data.stream().map(SensorData::getValue).collect(Collectors.toList());
-      message = new TelemetryMessage(timeStamp, deviceId, data);
-      System.out.printf(" id: %s %n timeStamp: %s %n dataValues: %s%n%n",
-                message.getDeviceId(), message.getTimeStamp(),
-                message.processingSensorData(SensorData::getValue).stream()
-                        .map(s -> Arrays.toString(s))
-                        .collect(Collectors.toList()));
-      in.close();
-      out.close();
-
-    
-    
-    fTimeRe = new HashMap<>();
-    Stream.iterate(-20.0, i -> i + 0.5).limit(80).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x)));
-    
-    Plotter plot = new Plotter("Title", "Title", fTimeRe);
-    plot.pack();
-    plot.setVisible(true);
-//    JFrame frame = new JFrame();
-//    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-//    frame.add(new Plotter("title", "title", fTimeRe));
-//    frame.setSize(400,400);
-//    frame.setLocation(200, 200);
-//    frame.setVisible(true);
+      Plotter plot = new Plotter("Title", "Title", fTimeRe);
+      plot.pack();
+      plot.setVisible(true);
     } catch(SocketException ex) {
-      System.out.println("Could not send data");
-    } catch (IOException ex) {
-      Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (ClassNotFoundException ex) {
+      System.out.println("Could not get data");
+    } catch (IOException | ClassNotFoundException ex) {
       Logger.getLogger(GettingClient.class.getName()).log(Level.SEVERE, null, ex);
     }
   }

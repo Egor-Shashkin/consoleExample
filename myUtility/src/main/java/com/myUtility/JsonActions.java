@@ -52,33 +52,9 @@ public class JsonActions {
         return null;
       }
     }
-    
-    
-    public void gsonCollectionWrite(String file){
-        Collection<String> collection = new ArrayList<>();
-        String json;
-        System.out.print("input collection item or -1 to exit: ");
-        String input = scan.nextLine();
-        while(!input.equals("-1")){
-            collection.add(input);
-            System.out.print("input: ");
-            input = scan.nextLine();
-        }
-        json = gson.toJson(collection);
-        try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))){
-            writer.write(json);
-            writer.newLine();
-            System.out.printf("successfully wrote to %s.json json file:%n %s %n", file, json);
-        }
-        catch (IOException e){
-            System.out.println(e.getMessage());
-            
-        }
-    }
+
     
     public void gsonCollectionWrite(String file, String json){
-        Collection<String> collection = new ArrayList<>();
-        json = gson.toJson(collection);
         try(BufferedWriter writer = new BufferedWriter(new FileWriter(file))){
             writer.write(json);
             writer.newLine();

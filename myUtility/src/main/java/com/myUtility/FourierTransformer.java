@@ -7,6 +7,8 @@ package com.myUtility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import net.objecthunter.exp4j.Expression;
+import net.objecthunter.exp4j.ExpressionBuilder;
 /**
  *
  * @author Andrei
@@ -52,12 +54,47 @@ public class FourierTransformer {
   
 
   public Double inverseFourierSeries(ArrayList<Double[]> fOmega, Double x){
+    return inverseFourierSeries(fOmega, x, Math.PI);
+  }
+    public Double inverseFourierSeries(ArrayList<Double[]> fOmega, Double x, double range){
     Double fTime;
-    fTime = fOmega.get(0)[0];
+    fTime = fOmega.get(0)[1];
     fTime += fOmega.stream().skip(1)
-      .map(n -> { return n[1] * Math.cos(n[0] * x) + n[2] * Math.sin(n[0] * x);})
+      .map(n -> { return (n[1] * Math.cos(Math.PI * n[0] * x / range) + n[2] * Math.sin(Math.PI * n[0] * x / range));})
       .collect(Collectors.summingDouble(Double::doubleValue));
     
     return fTime;
   }
+  
+  public ArrayList<Double[]> FourierSeries(String equation, double range){
+    //equation = "sin(x)";
+    ArrayList<Double[]> fOmega = new ArrayList<>();
+    Expression expression = new ExpressionBuilder(equation).variable("x").build();
+    double an;
+    double bn;
+    double a0 = 2/range * integrate(expression, range);
+    fOmega.add(new Double[]{0.0, a0, 0.0});
+    for (int i = 1; i < 10; i++){
+      expression = new ExpressionBuilder(String.format("(%s) * cos(%s * %s * x / %s)", equation, Math.PI, i, range)).variable("x").build();
+      an  = integrate(expression, range)/range;
+      expression = new ExpressionBuilder(String.format("(%s) * sin(%s * %s * x / %s)", equation, Math.PI, i, range)).variable("x").build();
+      bn = integrate(expression, range)/range;
+      fOmega.add(new Double[]{(double) i, an, bn});
+    }
+    return fOmega;
+  }
+  public ArrayList<Double[]> FourierSeries(String equation){
+    return FourierSeries(equation, Math.PI);
+  }
+
+  
+  private double integrate(Expression expression, double range){
+    double integralValue = 0.0;
+    double step = 0.1;
+    for (double x = -range; x <= range-step; x += step){
+      integralValue += step * (expression.setVariable("x", x).evaluate() + expression.setVariable("x", x+step).evaluate())/2;
+    }
+    return integralValue;
+  }
+  
 }

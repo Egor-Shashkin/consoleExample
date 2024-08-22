@@ -43,9 +43,7 @@ public class EchoServer {
         out.close();
         in.close();
 
-      } catch (IOException ex) {
-        Logger.getLogger(EchoServer.class.getName()).log(Level.SEVERE, null, ex);
-      } catch (ClassNotFoundException ex) {
+      } catch (IOException | ClassNotFoundException ex) {
         Logger.getLogger(EchoServer.class.getName()).log(Level.SEVERE, null, ex);
       }
   }

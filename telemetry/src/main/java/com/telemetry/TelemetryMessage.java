@@ -28,6 +28,7 @@ public class TelemetryMessage {
   private ArrayList<SensorData> data;
   
   
+  
   public TelemetryMessage(){
     data = new ArrayList<>();
     deviceId = "1";
@@ -64,8 +65,14 @@ public class TelemetryMessage {
   }
   
   public void generatingSensorData(){
+    double an;
+    double bn;
+    double alpha = 0.2;
+
     for (int i = 0; i < 10; i++){
-      data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{Math.random(), Math.random(), Math.random()}));
+      an = Math.random() * 10 * Math.exp(-i * alpha);
+      bn = Math.random() * 10 * Math.exp(-i * alpha);
+      data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{(double)i, an, bn}));
     }
   }
 }

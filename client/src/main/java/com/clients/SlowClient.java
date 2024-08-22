@@ -22,14 +22,12 @@ import java.util.logging.Logger;
  * @author Andrei
  */
 public class SlowClient {
-  private String id;
-  private int port;
+  private final String id;
+  private final int port;
   private Socket clientSocket;
-  private DataOutputStream out;
-  private ObjectInputStream in;
   private TelemetryMessage message;
   private String json;
-  private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
+  private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
   
   public SlowClient(int port, String id) {
     this.port = port;
@@ -45,17 +43,9 @@ public class SlowClient {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       message.generatingSensorData();
       json = gson.toJson(message, TelemetryMessage.class);
-      System.out.println("waiting for spare server thread");
-      in = new ObjectInputStream(clientSocket.getInputStream());
-      in.readObject();
-      System.out.println("sending data slowly");
+      Protocol protocol = new Protocol(ConnectionMode.SEND, id, json);
       TimeUnit.SECONDS.sleep(10);
-      out = new DataOutputStream(clientSocket.getOutputStream());
-      //out.writeBytes(String.format("send %s%n%s", id, json));
-      out.writeBytes(new Protocol(ConnectionMode.SEND, id, json).connectionMessage());
-      in.close();
-      out.close();
-      clientSocket.close();
+      protocol.connect(clientSocket);
     } catch (SocketException ex) {
       System.out.println("Could not send data");
     } catch (IOException ex) {

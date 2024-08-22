@@ -4,8 +4,10 @@
  */
 package com.myUtility;
 
-import java.lang.annotation.Retention;
-import org.checkerframework.common.value.qual.StringVal;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.net.Socket;
 /**
  *
  * @author Andrei
@@ -14,9 +16,9 @@ import org.checkerframework.common.value.qual.StringVal;
 
 public class Protocol{
 
-  private ConnectionMode mode;
-  private String id;
-  private String message;
+  private final ConnectionMode mode;
+  private final String id;
+  private final String message;
 
   public Protocol(ConnectionMode mode, String id, String message) {
     this.mode = mode;
@@ -38,6 +40,28 @@ public class Protocol{
   
   public String connectionMessage(){
     return String.format("%s %s%n %s", mode.name(), id, message);
+  }
+  
+  public String connect(Socket socket) throws IOException, ClassNotFoundException{
+    String response = null;
+    DataOutputStream out;
+    ObjectInputStream in;
+    out = new DataOutputStream(socket.getOutputStream());
+    in = new ObjectInputStream(socket.getInputStream());
+    System.out.println("waiting for spare server thread");
+    in.readObject();
+    System.out.println("sending request");
+    out.writeBytes(connectionMessage());
+    out.flush();
+    if (mode != ConnectionMode.SEND){
+    System.out.println("getting response");
+    response = (String) in.readObject();
+    }
+    socket.close();
+    in.close();
+    out.close();
+    System.out.println("Connection closed");
+    return response;
   }
   
 }

@@ -39,7 +39,6 @@ public class App {
     Options options = config.configureOptions();
     config.optionsExecution(options, args);
 
-    //when get more connection attempts than max number of server threads it throws SocketException
     //exec is used for running server
     ExecutorService exec = Executors.newFixedThreadPool(4);
     //clientExec is used to artificially make clients

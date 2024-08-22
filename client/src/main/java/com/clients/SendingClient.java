@@ -7,7 +7,9 @@ package com.clients;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.my.TelemetryMessage;
+import com.myUtility.ConnectionMode;
+import com.telemetry.TelemetryMessage;
+import com.myUtility.Protocol;
 import java.io.*;
 import java.net.*;
 import java.util.logging.Level;
@@ -41,7 +43,8 @@ public class SendingClient {
       in.readObject();
       System.out.println("sending data slowly");
       out = new DataOutputStream(clientSocket.getOutputStream());
-      out.writeBytes(String.format("send %s%n%s", id, json));
+      //out.writeBytes(String.format("send %s%n%s", id, json));
+      out.writeBytes(new Protocol(ConnectionMode.SEND, id, json).connectionMessage());
       in.close();
       out.close();
       clientSocket.close();

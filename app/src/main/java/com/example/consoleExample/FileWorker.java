@@ -9,7 +9,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.my.TelemetryMessage;
+import com.telemetry.TelemetryMessage;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;

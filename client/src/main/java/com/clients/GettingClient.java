@@ -9,8 +9,10 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import com.my.SensorData;
-import com.my.TelemetryMessage;
+import com.telemetry.SensorData;
+import com.telemetry.TelemetryMessage;
+import com.myUtility.Protocol;
+import com.myUtility.ConnectionMode;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.PrintWriter;
@@ -39,7 +41,7 @@ public class GettingClient {
   
   public static void main(String[] args){
     int port = 7777;
-    int id = 5;
+    String id = "5";
     long timeStamp;
     Socket clientSocket;
     PrintWriter out;
@@ -63,7 +65,8 @@ public class GettingClient {
       System.out.println("waiting for spare server thread");
       in.readObject();
       System.out.println("sending request");
-      out.print(String.format("get %s%n", id));
+      //out.print(String.format("get %s%n", id));
+      out.print(new Protocol(ConnectionMode.GET, id).connectionMessage());
       out.flush();
       System.out.println("getting json");
       json = (String) in.readObject();
@@ -89,7 +92,7 @@ public class GettingClient {
     
     
     fTimeRe = new HashMap<>();
-    Stream.iterate(-20.0, i -> i + 0.1).limit(1000).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x)));
+    Stream.iterate(-20.0, i -> i + 0.5).limit(80).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x)));
     
     Plotter plot = new Plotter("Title", "Title", fTimeRe);
     plot.pack();

@@ -18,6 +18,7 @@ import org.jfree.chart.JFreeChart;
 import org.jfree.chart.plot.PlotOrientation;
 import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.chart.ui.ApplicationFrame;
 import org.jfree.data.category.DefaultCategoryDataset;
 import org.jfree.data.xy.XYDataset;
@@ -55,7 +56,7 @@ public class Plotter extends ApplicationFrame{
       chartPanel.setPreferredSize( new java.awt.Dimension(width, height));
       final XYPlot plot = xylineChart.getXYPlot();
       
-      XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer();
+      XYLineAndShapeRenderer renderer = new XYSplineRenderer();
       renderer.setSeriesPaint(0, Color.RED);
       renderer.setSeriesStroke(0, new BasicStroke());
       renderer.setDefaultShapesVisible(false);

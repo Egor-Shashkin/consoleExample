@@ -14,10 +14,10 @@ plugins {
 
 rootProject.name = 'consoleExample'
 include('app')
-include('telemetrylib')
+include('telemetry')
 include('client')
 include('myUtility')
-project(':telemetrylib').projectDir = new File(settingsDir, './telemetrylib')
+project(':telemetry').projectDir = new File(settingsDir, './telemetry')
 project(':client').projectDir = new File(settingsDir, './client')
 project(':myUtility').projectDir = new File(settingsDir, './myUtility')
 

@@ -4,6 +4,7 @@
  */
 package com.example.consoleExample;
 
+import com.myUtility.ConnectionMode;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -63,9 +64,7 @@ public class ServerThread implements Runnable{
       
 
       //choosing action according to command
-      
-      //TODO: write a protocol to parse client-server communication
-      if (meta[0].equals("send")){
+      if (meta[0].equals(ConnectionMode.SEND.name())){
         System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
         String json = in.lines().collect(Collectors.joining("\n"));
         fileName = String.format("telemetry_data_%s.json", meta[1]);
@@ -73,7 +72,7 @@ public class ServerThread implements Runnable{
         worker.writeFileData(file, json);
       }
 
-      else if (meta[0].equals("get")){
+      else if (meta[0].equals(ConnectionMode.GET.name())){
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         file = new File(filePath, fileName);
         System.out.println("server: sending values");
@@ -81,7 +80,7 @@ public class ServerThread implements Runnable{
         System.out.println("server: values sent");
       }
       
-      else if (meta[0].equals("getAll")){
+      else if (meta[0].equals(ConnectionMode.GETALL.name())){
         
         out.writeObject(worker.getAllFileData(filePath));
       }
@@ -90,7 +89,7 @@ public class ServerThread implements Runnable{
         out.writeBytes("unknown connection");
         System.out.println("server: meta error");
       }
-      clientSocket.close();
+      //clientSocket.close();
 
     } catch (SocketTimeoutException ex) {
       System.out.printf("waiting socket input time exceed %s%nTerminating connection%n", TimeUnit.MILLISECONDS.toSeconds(timeout));

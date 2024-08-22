@@ -11,7 +11,7 @@ dependencies {
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.google.guava:guava:32.1.1-jre'
     implementation(project(':myUtility'))
-    implementation(project(':telemetrylib'))
+    implementation(project(':telemetry'))
     implementation 'com.google.code.gson:gson:2.11.0'    
     implementation 'commons-cli:commons-cli:1.8.0'
     implementation files('../commons-cli-1.8.0.jar')

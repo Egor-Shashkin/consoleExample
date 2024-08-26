@@ -16,6 +16,10 @@ dependencies {
     implementation 'commons-cli:commons-cli:1.8.0'
     implementation files('../commons-cli-1.8.0.jar')
     implementation 'org.jfree:jfreechart:1.5.3'
+    implementation 'com.codepoetics:protonpack:1.16'
+    implementation files('../apache/commons-numbers-1.2/commons-numbers-complex-1.2.jar')
+
+
 }
 
 test {

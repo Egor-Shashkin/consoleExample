@@ -18,9 +18,11 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import com.myUtility.*;
+import java.awt.geom.Point2D;
 import java.util.HashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.numbers.complex.Complex;
 
 /**
  *
@@ -38,7 +40,8 @@ public class GettingClient {
     String json;
     TelemetryMessage message;
     final ArrayList<Double[]> fOmega;
-    HashMap<Double, Double> fTimeRe;
+    ArrayList<Point2D> fTimeRe = new ArrayList<>();
+    HashMap<Double, Double> fTime;
     FourierTransformer transform = new FourierTransformer();
 
     try {
@@ -48,13 +51,14 @@ public class GettingClient {
       System.out.println("parsing json");
       message = TelemetryParser.parseTelemetryJson(json, true);
       //fOmega = (ArrayList<Double[]>) message.processingSensorData(SensorData::getValue);
-      fTimeRe = new HashMap<>();
-      int range = 5;
-      double step = 0.0005;
-      fOmega = transform.FourierSeries("x", range);
+      int range = 10;
+      int startingPoint = -5;
+      int nSteps = 2048;
+      int period = 5;
+      double step = 2 * (double) range/nSteps;
+      fOmega = transform.FourierSeries("cos(x)");
 
-      Stream.iterate((double) -range, i -> i + step).limit(Math.round(2*range/step)).forEach(x -> fTimeRe.put(x, transform.inverseFourierSeries(fOmega, x, range)));
-
+      fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega);
       Plotter plot = new Plotter("Title", "Title", fTimeRe);
       plot.pack();
       plot.setVisible(true);

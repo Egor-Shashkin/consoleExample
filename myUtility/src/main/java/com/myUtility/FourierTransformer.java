@@ -103,7 +103,7 @@ public class FourierTransformer {
             .map(x -> {
               double abscissa = x*step + startingPoint;
               double ordinate = fOmega.stream()
-                      .map(n -> { return (n[1] * Math.cos(Math.PI * n[0] * abscissa / period) + n[2] * Math.sin(Math.PI * n[0] * abscissa / period));})
+                      .map(n -> { return (n[1] * Math.cos(2 * Math.PI * n[0] * abscissa / period) + n[2] * Math.sin(2 * Math.PI * n[0] * abscissa / period));})
                       .collect(Collectors.summingDouble(Double::doubleValue));
               Point2D point = new Point2D.Double(abscissa, ordinate);
               return point;
@@ -113,7 +113,7 @@ public class FourierTransformer {
     return fTime;
   }
   
-  public ArrayList<Double[]> FourierSeries(String equation, double range){
+  public ArrayList<Double[]> FourierSeries(String equation, double period){
     //equation = "sin(x)";
     ArrayList<Double[]> fOmega = new ArrayList<>();
     ArrayList<Callable<Double[]>> tasks = new ArrayList<>();
@@ -121,24 +121,24 @@ public class FourierTransformer {
     Integer i;
     Expression expressionA;
     Expression expressionB;
-    double a0 = 2/range * integrate(e, range);
+    double a0 = 1/period * integrate(e, period);
     fOmega.add(new Double[]{0.0, a0, 0.0});
     
-    for (i = 1; i < 10; i++){
-      tasks.add(new getNthFreqMultiplier(equation, range, i));
+    for (i = 1; i < 100; i++){
+      tasks.add(new getNthFreqMultiplier(equation, period, i));
       //fOmega.add(new Double[]{i.doubleValue(), an, bn});
     }
     try {
     fOmega.addAll((ArrayList<Double[]>) exec.invokeAll(tasks).stream().map(n -> {
-    try
-    {
-        return n.get();
-    }
-    catch (InterruptedException | ExecutionException ex)
-    {
-        throw new RuntimeException(ex);
-    }
-}).collect(Collectors.toList()));
+      try
+      {
+          return n.get();
+      }
+      catch (InterruptedException | ExecutionException ex)
+      {
+          throw new RuntimeException(ex);
+      }
+    }).collect(Collectors.toList()));
     return fOmega;
     } catch (InterruptedException ex){
       System.out.println("integrating interrupted");
@@ -153,7 +153,7 @@ public class FourierTransformer {
   double integrate(Expression expression, double range){
     double integralValue = 0.0;
     double step = 0.01;
-    for (double x = -range; x <= range-step; x += step){
+    for (double x = -range/2; x <= range/2-step; x += step){
       integralValue += step * (expression.setVariable("x", x).evaluate() + expression.setVariable("x", x+step).evaluate())/2;
     }
     return integralValue;
@@ -163,26 +163,26 @@ public class FourierTransformer {
 
 class getNthFreqMultiplier implements Callable<Double[]>{
   String equation;
-  double range;
+  double period;
   int i;
   FourierTransformer t;
   Expression expressionA;
   Expression expressionB;
 
-  public getNthFreqMultiplier(String equation, double range, int i) {
+  public getNthFreqMultiplier(String equation, double period, int i) {
     this.equation = equation;
-    this.range = range;
+    this.period = period;
     this.i = i;
     t = new FourierTransformer();
-    expressionA = new ExpressionBuilder(String.format("(%s) * cos(%s * %s * x / %s)", equation, Math.PI, i, range)).variable("x").build();
-    expressionB = new ExpressionBuilder(String.format("(%s) * sin(%s * %s * x / %s)", equation, Math.PI, i, range)).variable("x").build();
+    expressionA = new ExpressionBuilder(String.format("(%s) * cos(%s * %s * x / %s)", equation, 2 * Math.PI, i, period)).variable("x").build();
+    expressionB = new ExpressionBuilder(String.format("(%s) * sin(%s * %s * x / %s)", equation, 2 * Math.PI, i, period)).variable("x").build();
   }
 
   @Override
   public Double[] call() throws Exception {
 
-    double an  = t.integrate(expressionA, range)/range;
-    double bn = t.integrate(expressionB, range)/range;
+    double an = 2 * t.integrate(expressionA, period)/period;
+    double bn = 2 * t.integrate(expressionB, period)/period;
     return new Double[]{(double) i, an, bn};
   }
   

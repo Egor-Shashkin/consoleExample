@@ -51,14 +51,14 @@ public class GettingClient {
       System.out.println("parsing json");
       message = TelemetryParser.parseTelemetryJson(json, true);
       //fOmega = (ArrayList<Double[]>) message.processingSensorData(SensorData::getValue);
-      int range = 10;
-      int startingPoint = -5;
+      int range = 22;
+      int startingPoint = -10;
       int nSteps = 2048;
-      int period = 5;
+      double period = 20;
       double step = 2 * (double) range/nSteps;
-      fOmega = transform.FourierSeries("cos(x)");
+      fOmega = transform.FourierSeries("x*x*x", period);
 
-      fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega);
+      fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega, period);
       Plotter plot = new Plotter("Title", "Title", fTimeRe);
       plot.pack();
       plot.setVisible(true);

@@ -43,7 +43,7 @@ public class App {
     ExecutorService exec = Executors.newFixedThreadPool(4);
     //clientExec is used to artificially make clients
     ExecutorService clientExec = Executors.newFixedThreadPool(5);
-    Integer timeout = 180000;
+    Integer timeout = 600000;
     Integer port = 7777;
     ServerSocket serverSocket = new ServerSocket(port);
     serverSocket.setSoTimeout(timeout);

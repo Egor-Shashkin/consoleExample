@@ -32,7 +32,7 @@ public class GettingAllClient {
       System.out.println("connecting to server");
       try {
         clientSocket = new Socket(InetAddress.getLocalHost(), port);
-        Protocol protocol = new Protocol(ConnectionMode.GETALL);
+        Protocol protocol = new Protocol(ConnectionMode.GETALL.name());
         json = protocol.connect(clientSocket);
         System.out.println("parsing json");
         array = new ArrayList<>();

@@ -90,19 +90,19 @@ public class FourierTransformer {
     return fTime;
   }
     
-  public List<Point2D> inverseFourierSeries(int startingPoint, int range, ArrayList<Double[]> fOmega){
+  public List<Point2D> inverseFourierSeries(int startingPoint, int range, List<Double[]> fOmega){
     return inverseFourierSeries(startingPoint, range, fOmega, Math.PI);
   }
-  public List<Point2D> inverseFourierSeries(int startingPoint, int range, ArrayList<Double[]> fOmega, double period){
+  public List<Point2D> inverseFourierSeries(int startingPoint, int range, List<Double[]> fOmega, double period){
     double step = 0.1;
     int nSteps = (int) (range/step);
     ArrayList<Point2D> fTime;
     
     fTime = (ArrayList<Point2D>) Stream.iterate(0, i -> i + 1)
-            .limit(nSteps)
+            .limit(nSteps).parallel()
             .map(x -> {
               double abscissa = x*step + startingPoint;
-              double ordinate = fOmega.stream()
+              double ordinate = fOmega.stream().parallel()
                       .map(n -> { return (n[1] * Math.cos(2 * Math.PI * n[0] * abscissa / period) + n[2] * Math.sin(2 * Math.PI * n[0] * abscissa / period));})
                       .collect(Collectors.summingDouble(Double::doubleValue));
               Point2D point = new Point2D.Double(abscissa, ordinate);
@@ -113,18 +113,17 @@ public class FourierTransformer {
     return fTime;
   }
   
-  public ArrayList<Double[]> FourierSeries(String equation, double period){
-    //equation = "sin(x)";
+  public List<Double[]> FourierSeries(String equation, double period){
+    //increasing nFreq can increase integration error which causes artifacts on graph
+    int nFreq = 100;
     ArrayList<Double[]> fOmega = new ArrayList<>();
     ArrayList<Callable<Double[]>> tasks = new ArrayList<>();
     Expression e = new ExpressionBuilder(equation).variable("x").build();
     Integer i;
-    Expression expressionA;
-    Expression expressionB;
     double a0 = 1/period * integrate(e, period);
     fOmega.add(new Double[]{0.0, a0, 0.0});
     
-    for (i = 1; i < 100; i++){
+    for (i = 1; i < nFreq; i++){
       tasks.add(new getNthFreqMultiplier(equation, period, i));
       //fOmega.add(new Double[]{i.doubleValue(), an, bn});
     }
@@ -145,27 +144,25 @@ public class FourierTransformer {
       return null;
     }
   }
-  public ArrayList<Double[]> FourierSeries(String equation){
+  public List<Double[]> FourierSeries(String equation){
     return FourierSeries(equation, Math.PI);
   }
 
   
-  double integrate(Expression expression, double range){
+  double integrate(Expression expression, double period){
     double integralValue = 0.0;
-    double step = 0.01;
-    for (double x = -range/2; x <= range/2-step; x += step){
+    double step = 0.001;
+    for (double x = -period/2; x <= period/2-step; x += step){
       integralValue += step * (expression.setVariable("x", x).evaluate() + expression.setVariable("x", x+step).evaluate())/2;
     }
     return integralValue;
   }
   
-}
-
-class getNthFreqMultiplier implements Callable<Double[]>{
+  
+  class getNthFreqMultiplier implements Callable<Double[]>{
   String equation;
   double period;
   int i;
-  FourierTransformer t;
   Expression expressionA;
   Expression expressionB;
 
@@ -173,7 +170,6 @@ class getNthFreqMultiplier implements Callable<Double[]>{
     this.equation = equation;
     this.period = period;
     this.i = i;
-    t = new FourierTransformer();
     expressionA = new ExpressionBuilder(String.format("(%s) * cos(%s * %s * x / %s)", equation, 2 * Math.PI, i, period)).variable("x").build();
     expressionB = new ExpressionBuilder(String.format("(%s) * sin(%s * %s * x / %s)", equation, 2 * Math.PI, i, period)).variable("x").build();
   }
@@ -181,9 +177,11 @@ class getNthFreqMultiplier implements Callable<Double[]>{
   @Override
   public Double[] call() throws Exception {
 
-    double an = 2 * t.integrate(expressionA, period)/period;
-    double bn = 2 * t.integrate(expressionB, period)/period;
+    double an = 2 * integrate(expressionA, period)/period;
+    double bn = 2 * integrate(expressionB, period)/period;
     return new Double[]{(double) i, an, bn};
   }
   
 }
+}
+

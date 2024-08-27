@@ -16,30 +16,30 @@ import java.net.Socket;
 
 public class Protocol{
 
-  private final ConnectionMode mode;
+  private final String mode;
   private final String id;
   private final String message;
 
-  public Protocol(ConnectionMode mode, String id, String message) {
+  public Protocol(String mode, String id, String message) {
     this.mode = mode;
     this.id = id;
     this.message = message;
   }
   
-  public Protocol(ConnectionMode mode, String id){
+  public Protocol(String mode, String id){
     this.mode = mode;
     this.id = id;
     message = "";
   }
   
-  public Protocol(ConnectionMode mode){
+  public Protocol(String mode){
     this.mode = mode;
     id = "";
     message = "";
   }
   
   public String connectionMessage(){
-    return String.format("%s %s%n %s", mode.name(), id, message);
+    return String.format("%s %s%n %s", mode, id, message);
   }
   
   public String connect(Socket socket) throws IOException, ClassNotFoundException{
@@ -53,7 +53,7 @@ public class Protocol{
     System.out.println("sending request");
     out.writeBytes(connectionMessage());
     out.flush();
-    if (mode != ConnectionMode.SEND){
+    if (!mode.equalsIgnoreCase(ConnectionMode.SEND.name())){
     System.out.println("getting response");
     response = (String) in.readObject();
     }

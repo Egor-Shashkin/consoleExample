@@ -43,7 +43,7 @@ public class SlowClient {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       message.generatingSensorData();
       json = gson.toJson(message, TelemetryMessage.class);
-      Protocol protocol = new Protocol(ConnectionMode.SEND, id, json);
+      Protocol protocol = new Protocol(ConnectionMode.SEND.name(), id, json);
       TimeUnit.SECONDS.sleep(10);
       protocol.connect(clientSocket);
     } catch (SocketException ex) {

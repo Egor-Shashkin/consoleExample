@@ -46,7 +46,7 @@ public class GettingClient {
 
     try {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
-      Protocol protocol = new Protocol(ConnectionMode.GET, id);
+      Protocol protocol = new Protocol(ConnectionMode.GET.name(), id);
       json = protocol.connect(clientSocket);
       System.out.println("parsing json");
       message = TelemetryParser.parseTelemetryJson(json, true);
@@ -54,9 +54,11 @@ public class GettingClient {
       int range = 22;
       int startingPoint = -10;
       int nSteps = 2048;
-      double period = 20;
+      double period = Math.PI * 2;
+      range = (int)Math.round(period);
+      startingPoint = -range/2;
       double step = 2 * (double) range/nSteps;
-      fOmega = transform.FourierSeries("x*x*x", period);
+      fOmega = (ArrayList<Double[]>) transform.FourierSeries("sin(x)", period);
 
       fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega, period);
       Plotter plot = new Plotter("Title", "Title", fTimeRe);

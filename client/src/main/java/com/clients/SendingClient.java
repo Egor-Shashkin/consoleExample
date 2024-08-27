@@ -36,15 +36,13 @@ public class SendingClient {
       clientSocket = new Socket(InetAddress.getLocalHost(), port);
       message.generatingSensorData();
       json = gson.toJson(message, TelemetryMessage.class);
-      Protocol protocol = new Protocol(ConnectionMode.SEND, id, json);
+      Protocol protocol = new Protocol(ConnectionMode.SEND.name(), id, json);
       protocol.connect(clientSocket);
       
     } catch(SocketException ex) {
       System.out.println("Could not send data");
-    } catch (IOException ex) {
+    } catch (IOException | ClassNotFoundException ex) {
       Logger.getLogger(SendingClient.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (ClassNotFoundException ex) {
-      Logger.getLogger(SlowClient.class.getName()).log(Level.SEVERE, null, ex);
     }
     
   }

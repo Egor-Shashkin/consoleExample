@@ -34,6 +34,7 @@ public class ServerThread implements Runnable{
   String[] meta;
   File file;
   FileWorker worker;
+  String output;
   
   
 
@@ -62,7 +63,7 @@ public class ServerThread implements Runnable{
       System.out.printf("T%s: server: reading input %n", Thread.currentThread().getId());
       meta = in.readLine().split(" ");
       
-
+      //TODO catch exception when id is invalid
       //choosing action according to command
       if (meta[0].equals(ConnectionMode.SEND.name())){
         System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), meta[1]);
@@ -77,13 +78,14 @@ public class ServerThread implements Runnable{
         fileName = String.format("telemetry_data_%s.json", meta[1]);
         file = new File(filePath, fileName);
         System.out.println("server: sending values");
-        out.writeObject(worker.getFileData(file));
+        output = worker.getFileData(file);
+        out.writeObject(output);
         System.out.println("server: values sent");
       }
       
       else if (meta[0].equals(ConnectionMode.GETALL.name())){
-        
-        out.writeObject(worker.getAllFileData(filePath));
+        output = worker.getAllFileData(filePath);
+        out.writeObject(output);
       }
 
       else {

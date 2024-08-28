@@ -6,6 +6,7 @@ package com.clients;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.myUtility.ConnectionMode;
 import com.myUtility.FourierTransformer;
 import com.telemetry.TelemetryMessage;
@@ -15,6 +16,7 @@ import com.telemetry.SensorData;
 import java.awt.geom.Point2D;
 import java.io.IOException;
 import static java.lang.System.exit;
+import java.net.ConnectException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
@@ -26,6 +28,7 @@ import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.numbers.complex.Complex;
 import org.apache.commons.validator.routines.InetAddressValidator;
 
 /**
@@ -75,7 +78,7 @@ public class Client {
     while (true){
       json = "";
       port = 7777;
-      System.out.printf("enter connection mode and id (only for send and get):%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
+      System.out.printf("enter connection mode and id (only for send and get):%n%s [id] (default id: default) %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
       mode = input[0].toUpperCase();
       try {
@@ -83,65 +86,79 @@ public class Client {
       } catch (ArrayIndexOutOfBoundsException ex) {
         id = "default";
       }
-      switch (mode) {
-        case "GET":
-          get();
-          System.out.println("plot the response data? y/n \n default: n\n");
-          if (scan.nextLine().equals("y")){
-            System.out.println("enter: starting point, range of plotting, period of plotting function (default: -10, 20, 2pi)%n");
-            input = scan.nextLine().split(" ");
-            plot(input, message);
-          }
-          break;
-        case "SEND":
-          send();
-          break;
-        case "GETALL":
-          getAll();
-          break;
-        case "EXIT":
-          exit(0);
-          break;
+      try {
+        switch (mode) {
+          case "GET":
+            try {
+              get();
+              System.out.println("plot the response data? y/n \n default: n\n");
+              if (scan.nextLine().equals("y")){
+                plot(input, message);
+              }
+            } catch (JsonSyntaxException e) {
+              System.out.println("file not found or corrupted");
+            }
+
+            break;
+          case "SEND":
+            send();
+            break;
+          case "GETALL":
+            getAll();
+            break;
+          case "EXIT":
+            exit(0);
+            break;
+        }
+      } catch (ConnectException ex) {
+        System.out.println("Connection error");
+        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+      } catch (IOException ex) {
+        Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
   }
 
 
-  private static String connect(){
-    String response = null;
+  private static String connect() throws ConnectException, IOException{
     try {
+      String response = null;
       clientSocket = new Socket(ip, port);
       Protocol protocol = new Protocol(mode.toUpperCase(), id, json);
       response = protocol.connect(clientSocket);
-      message.generatingSensorData();
-    } catch (SocketException ex) {
-      System.out.println("Connection error");
-      Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (IOException ex) {
-      Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
-    } finally {
+//      message.generatingSensorData();
       return response;
+    } catch (ClassNotFoundException ex) {
+      Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
     }
   }
   
   
-  private static void send(){
+  private static void send() throws ConnectException, IOException{
       message = new TelemetryMessage(id);
-      message.generatingSensorData();
+      System.out.println("select type of data:\n FS (fourier series)/ FFT");
+      if (scan.nextLine().toUpperCase().equals("FS"))
+        message.generatingSensorData();
+      else
+        message.generatingfftData();
       json = gson.toJson(message, TelemetryMessage.class);
       connect();
   }
   
   
-  private static TelemetryMessage get(){
+  private static TelemetryMessage get() throws ConnectException, IOException{
     System.out.println("connecting to server");
     json = connect();
     System.out.println("parsing json");
-    message = TelemetryParser.parseTelemetryJson(json, true);
+    if (json != null)
+      message = TelemetryParser.parseTelemetryJson(json, true);
+    else
+      message = TelemetryMessage.getDefaultMessage();
     return message;
   }
   
-  private static List<TelemetryMessage> getAll(){
+  private static List<TelemetryMessage> getAll() throws ConnectException, IOException{
     ArrayList<TelemetryMessage> array;
     System.out.println("connecting to server");
     json = connect();
@@ -152,30 +169,28 @@ public class Client {
   
   
   private static void plot(String[] plotParams, TelemetryMessage message){
-    int startingPoint;
     int range;
     double period;
     ArrayList<Double[]> fOmega;
-    FourierTransformer transform = new FourierTransformer();
     ArrayList<Point2D> fTimeRe;
-    
+    System.out.println("enter: range of plotting, period of plotting function (default: 10, 20)");
+    input = scan.nextLine().split(" ");
     try {
-      startingPoint = Integer.parseInt(plotParams[0]);
-      range = Integer.parseInt(plotParams[1]);
-      try {
-        period = Double.parseDouble(plotParams[2]);
-      } catch (ArrayIndexOutOfBoundsException ex) {
-        period = 2 * Math.PI;
-      }
-    } catch (Exception e) {
+      range = 2 * Integer.parseInt(plotParams[0]);
+      period = Double.parseDouble(plotParams[1]);
+    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
       System.out.println("plot parameters missing or corrupted\nassigning default values");
-      startingPoint = -10;
       range = 20;
-      period = 2 * Math.PI;
+      period = range;
     }
     
     fOmega = (ArrayList<Double[]>) message.processingSensorData(SensorData::getValue);
-    fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega, period);
+    if (fOmega.get(0).length == 3) {
+    fTimeRe = (ArrayList<Point2D>) FourierTransformer.inverseFourierSeries(range, fOmega, period);
+    } else {
+      Complex[] array = fOmega.stream().map(n -> Complex.ofCartesian(n[0], n[1])).toArray(size -> new Complex[size]);
+      fTimeRe = (ArrayList<Point2D>) FourierTransformer.getFuncPoints(FourierTransformer.ifft(array), range);
+    }
     Plotter plot = new Plotter("Title", "Title", fTimeRe);
     plot.pack();
     plot.setVisible(true);

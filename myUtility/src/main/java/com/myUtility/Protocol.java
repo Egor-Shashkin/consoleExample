@@ -5,6 +5,7 @@
 package com.myUtility;
 
 import java.io.DataOutputStream;
+import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.net.Socket;
@@ -48,15 +49,20 @@ public class Protocol{
     ObjectInputStream in;
     out = new DataOutputStream(socket.getOutputStream());
     in = new ObjectInputStream(socket.getInputStream());
-    System.out.println("waiting for spare server thread");
-    in.readObject();
-    System.out.println("sending request");
-    out.writeBytes(connectionMessage());
-    out.flush();
-    if (!mode.equalsIgnoreCase(ConnectionMode.SEND.name())){
-    System.out.println("getting response");
-    response = (String) in.readObject();
+    try {
+      System.out.println("waiting for spare server thread");
+      in.readObject();
+      System.out.println("sending request");
+      out.writeBytes(connectionMessage());
+      out.flush();
+      if (!mode.equalsIgnoreCase(ConnectionMode.SEND.name())){
+      System.out.println("getting response");
+      response = (String) in.readObject();
+      }
+    } catch (EOFException e) {
+      System.out.println("input read error");
     }
+    
     socket.close();
     in.close();
     out.close();

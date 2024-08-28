@@ -19,6 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.GuardedBy;
 import net.objecthunter.exp4j.Expression;
@@ -29,58 +30,100 @@ import org.apache.commons.numbers.complex.Complex;
  * @author Andrei
  */
 public class FourierTransformer {
+  private static final int nDots = 2048;
+
   private static ExecutorService exec = Executors.newCachedThreadPool();
 
+   public static Complex[] fft(Complex[] x) {
+        int n = x.length;
 
-  public HashMap<Double, Double> inverseDiscreteTransform(List<Complex> fOmega){
-    HashMap<Double, Double> fTime = new HashMap<>();
-    Complex xn = Complex.ZERO;
-    Complex inverseTransformExp;
-    int size = fOmega.size();
-    
-    //do the same but with streams?  
-    for (int n = 0; n <= size; n++){
+        // base case
+        if (n == 1) return new Complex[] { x[0] };
 
-      for(int k = 0; k < size - 1; k++){
-        inverseTransformExp = Complex.I.multiply(2 * Math.PI * k * n / size).exp();
-        xn = xn.add(fOmega.get(k).multiply(inverseTransformExp).divide(size));
-      }
-      fTime.put((double) n, xn.real());
+        // radix 2 Cooley-Tukey FFT
+        if (n % 2 != 0) {
+            throw new IllegalArgumentException("n is not a power of 2");
+        }
+
+        // compute FFT of even terms
+        Complex[] even = new Complex[n/2];
+        for (int k = 0; k < n/2; k++) {
+            even[k] = x[2*k];
+        }
+        Complex[] evenFFT = fft(even);
+
+        // compute FFT of odd terms
+        Complex[] odd  = even;  // reuse the array (to avoid n log n space)
+        for (int k = 0; k < n/2; k++) {
+            odd[k] = x[2*k + 1];
+        }
+        Complex[] oddFFT = fft(odd);
+
+        // combine
+        Complex[] y = new Complex[n];
+        for (int k = 0; k < n/2; k++) {
+            double kth = -2 * k * Math.PI / n;
+            Complex wk = Complex.ofCartesian(Math.cos(kth), Math.sin(kth));
+            y[k]       = evenFFT[k].add(wk.multiply(oddFFT[k]));
+            y[k + n/2] = evenFFT[k].subtract(wk.multiply(oddFFT[k]));
+        }
+        return y;
     }
-    return fTime;
+
+
+    // compute the inverse FFT of x[], assuming its length n is a power of 2
+    public static Complex[] ifft(Complex[] x) {
+        int n = x.length;
+        Complex[] y = new Complex[n];
+
+        // take conjugate
+        for (int i = 0; i < n; i++) {
+            y[i] = x[i].conj();
+        }
+
+        // compute forward FFT
+        y = fft(y);
+
+        // take conjugate again
+        for (int i = 0; i < n; i++) {
+            y[i] = y[i].conj();
+        }
+
+        // divide by n
+        for (int i = 0; i < n; i++) {
+            y[i] = y[i].divide(n);
+        }
+
+        return y;
+
+    }
+
+
+  
+  public static Complex[] getFuncValues(String equation, int range){
+    double step = (double) 2 * range/nDots;
+    Expression expression = new ExpressionBuilder(equation).variable("x").build();
+    Complex[] values = (Complex[]) IntStream.range(0, nDots).mapToObj(n -> {
+      double x = n*step - range;
+      return Complex.ZERO.add(expression.setVariable("x", x).evaluate());})
+      .toArray(nDots -> new Complex[nDots]);
+    return values;
   }
   
-  public ArrayList<Complex> discreteTransform(List<Double> fTime){
-    int N = fTime.size();
-    Complex p;
-    Complex q;
-    ArrayList<Complex> fOmega = (ArrayList<Complex>) Stream.generate(() -> Complex.ZERO).limit(N).collect(Collectors.toList());
-    ArrayList<Complex> joinedList = new ArrayList<>();
-    AtomicInteger counter = new AtomicInteger(0);
-    Map<Boolean, List<Double>> collect = fTime.stream()
-            .collect(Collectors.partitioningBy(e -> counter.getAndIncrement() < fTime.size() / 2,
-            Collectors.toList()));
-    if (collect.get(false).size() > 1){
-      joinedList = (ArrayList<Complex>) Stream.concat(discreteTransform(collect.get(false)).stream(),
-              discreteTransform(collect.get(true)).stream()).collect(Collectors.toList());
-      for (int i = 0; i <= N/2-1; i++){
-        p = joinedList.get(i);
-        q = Complex.I.multiply(-2 * Math.PI * i / N ).exp().multiply(joinedList.get(i+N/2));
-        fOmega.add(i, p.add(q));
-        fOmega.add(i+N/2, p.subtract(q));
-      }
-    } else {
-      fOmega.add(Complex.ZERO.add(fTime.get(0)));
-      //fOmega.add(Complex.ZERO.add(fTime.get(1)));
-    }
-    
-    return fOmega;
+  public static List<Point2D> getFuncPoints(Complex[] fTime, int range){
+    ArrayList<Point2D> points = (ArrayList<Point2D>) IntStream.range(0, fTime.length)
+            .mapToObj(n -> {
+            double x = (double) 2 * range/nDots * n - range;
+            Point2D point = new Point2D.Double(x, fTime[n].real());
+            return point;})
+            .collect(Collectors.toList());
+    return points;
   }
 
-  public Double inverseFourierSeries(ArrayList<Double[]> fOmega, Double x){
+  public static Double inverseFourierSeries(List<Double[]> fOmega, Double x){
     return inverseFourierSeries(fOmega, x, Math.PI);
   }
-    public Double inverseFourierSeries(ArrayList<Double[]> fOmega, Double x, double period){
+    public static Double inverseFourierSeries(List<Double[]> fOmega, Double x, double period){
     Double fTime;
     fTime = fOmega.get(0)[1];
     fTime += fOmega.stream().skip(1)
@@ -90,10 +133,10 @@ public class FourierTransformer {
     return fTime;
   }
     
-  public List<Point2D> inverseFourierSeries(int startingPoint, int range, List<Double[]> fOmega){
-    return inverseFourierSeries(startingPoint, range, fOmega, Math.PI);
+  public static List<Point2D> inverseFourierSeries(int range, List<Double[]> fOmega){
+    return inverseFourierSeries(range, fOmega, Math.PI);
   }
-  public List<Point2D> inverseFourierSeries(int startingPoint, int range, List<Double[]> fOmega, double period){
+  public static List<Point2D> inverseFourierSeries(int range, List<Double[]> fOmega, double period){
     double step = 0.1;
     int nSteps = (int) (range/step);
     ArrayList<Point2D> fTime;
@@ -101,7 +144,7 @@ public class FourierTransformer {
     fTime = (ArrayList<Point2D>) Stream.iterate(0, i -> i + 1)
             .limit(nSteps).parallel()
             .map(x -> {
-              double abscissa = x*step + startingPoint;
+              double abscissa = x*step - range/2;
               double ordinate = fOmega.stream().parallel()
                       .map(n -> { return (n[1] * Math.cos(2 * Math.PI * n[0] * abscissa / period) + n[2] * Math.sin(2 * Math.PI * n[0] * abscissa / period));})
                       .collect(Collectors.summingDouble(Double::doubleValue));
@@ -113,7 +156,7 @@ public class FourierTransformer {
     return fTime;
   }
   
-  public List<Double[]> FourierSeries(String equation, double period){
+  public static List<Double[]> FourierSeries(String equation, double period){
     //increasing nFreq can increase integration error which causes artifacts on graph
     int nFreq = 100;
     ArrayList<Double[]> fOmega = new ArrayList<>();
@@ -144,12 +187,12 @@ public class FourierTransformer {
       return null;
     }
   }
-  public List<Double[]> FourierSeries(String equation){
+  public static List<Double[]> FourierSeries(String equation){
     return FourierSeries(equation, Math.PI);
   }
 
   
-  double integrate(Expression expression, double period){
+  static double integrate(Expression expression, double period){
     double integralValue = 0.0;
     double step = 0.001;
     for (double x = -period/2; x <= period/2-step; x += step){
@@ -159,7 +202,7 @@ public class FourierTransformer {
   }
   
   
-  class getNthFreqMultiplier implements Callable<Double[]>{
+  private static class getNthFreqMultiplier implements Callable<Double[]>{
   String equation;
   double period;
   int i;

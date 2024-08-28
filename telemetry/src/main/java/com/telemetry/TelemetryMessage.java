@@ -75,4 +75,22 @@ public class TelemetryMessage {
       data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{(double)i, an, bn}));
     }
   }
+  
+    public void generatingfftData(){
+    double an;
+    double bn;
+    double alpha = 0.2;
+
+    for (int i = 0; i < 8; i++){
+      data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{Math.random(), Math.random()}));
+    }
+  }
+    
+  public static TelemetryMessage getDefaultMessage(){
+    TelemetryMessage message = new TelemetryMessage("default");
+    for (int i = 0; i < 8; i++){
+      message.data.add(new SensorData(String.format("Sensor_%s", i), new Double[]{0.0, 0.0}));
+    }
+    return message;
+  }
 }

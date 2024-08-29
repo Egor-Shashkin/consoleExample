@@ -22,7 +22,6 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -51,7 +50,6 @@ public class Client {
     TelemetryMessage message;
     ArrayList<TelemetryMessage> array;
     String id;
-    String json;
     String mode;
     String[] input;
     //getting connection parameters
@@ -82,9 +80,6 @@ public class Client {
     }
     //running connection
     while (true){
-      json = "";
-      port = 7777;
-      System.out.printf("enter connection mode and id (only for send and get):%n%s [id] (default id: default) %n or EXIT to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
       mode = input[0].toUpperCase();
       try {
@@ -140,14 +135,14 @@ public class Client {
       
       System.out.println("select type of data: FS (fourier series)/ FFT");
       type = scan.nextLine().toUpperCase();
-      if (type.equals("FS"))
-        message.generatingSensorData();
-      else if (type.equals("FFT"))
-        message.generatingfftData();
-      else {
+    switch (type) {
+      case "FS" -> message.generatingSensorData();
+      case "FFT" -> message.generatingfftData();
+      default -> {
         System.out.println("unknown data type. cancelling sending operation");
         return;
       }
+    }
       json = gson.toJson(message, TelemetryMessage.class);
       Protocol protocol = new Protocol(ConnectionMode.SEND.name(), id, json);
       connect(protocol);

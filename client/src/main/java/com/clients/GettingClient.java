@@ -19,7 +19,7 @@ import java.awt.geom.Point2D;
 public class GettingClient {
   public static void main(String[] args){
     ArrayList<Point2D> fTimeRe;
-      int range = 4;
+      int range = 20;
 //      double period = Math.PI * 2;
 //      range = (int)Math.round(period);
       fTimeRe = (ArrayList<Point2D>) FourierTransformer.getFuncPoints(FourierTransformer.ifft(

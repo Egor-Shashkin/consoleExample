@@ -63,11 +63,9 @@ public class Plotter extends ApplicationFrame implements ActionListener{
 
     ChartPanel chartPanel = createPanel(xylineChart);
     final XYPlot plot = xylineChart.getXYPlot();
-
     JPanel panel = new JPanel();
     chartPanel.add(button, BorderLayout.SOUTH);
     panel.add(chartPanel);
-    //panel.add(button, BorderLayout.SOUTH);
 
     plot.setRenderer(defaultRenderer()); 
     setContentPane(panel);
@@ -89,10 +87,6 @@ public class Plotter extends ApplicationFrame implements ActionListener{
       renderer.setSeriesStroke(0, new BasicStroke());
       renderer.setDefaultShapesVisible(false);
       return renderer;
-  }
-  
-  private XYSeriesCollection createDataset(ArrayList<Point2D> list){
-    return new XYSeriesCollection(addSeries(list));
   }
   
   private XYSeriesCollection createDataset(){
@@ -126,8 +120,6 @@ public class Plotter extends ApplicationFrame implements ActionListener{
       if (dataset.getSeriesCount() >= 2) 
         dataset.removeSeries(0);
       addSeries(cord);
-//    if (dataset.getSeriesCount() >= 2) 
-//      dataset.removeSeries(0);
   }
   
   public void clearPlot(){

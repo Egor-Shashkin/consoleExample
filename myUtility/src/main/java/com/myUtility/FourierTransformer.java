@@ -25,7 +25,6 @@ public class FourierTransformer {
   private static final int NDOTS = 1024;
 
   private static final ExecutorService exec = Executors.newCachedThreadPool();
-  //TODO concurrent fft
    public static Complex[] fft(Complex[] x) {
         int n = x.length;
 
@@ -53,12 +52,18 @@ public class FourierTransformer {
 
         // combine
         Complex[] y = new Complex[n];
-        for (int k = 0; k < n/2; k++) {
-            double kth = -2 * k * Math.PI / n;
-            Complex wk = Complex.ofCartesian(Math.cos(kth), Math.sin(kth));
-            y[k]       = evenFFT[k].add(wk.multiply(oddFFT[k]));
-            y[k + n/2] = evenFFT[k].subtract(wk.multiply(oddFFT[k]));
-        }
+//        for (int k = 0; k < n/2; k++) {
+//            double kth = -2 * k * Math.PI / n;
+//            Complex wk = Complex.ofCartesian(Math.cos(kth), Math.sin(kth));
+//            y[k]       = evenFFT[k].add(wk.multiply(oddFFT[k]));
+//            y[k + n/2] = evenFFT[k].subtract(wk.multiply(oddFFT[k]));
+//        }
+        IntStream.range(0, n/2).parallel().forEach(k -> {
+          double kth = -2 * k * Math.PI / n;
+          Complex wk = Complex.ofCartesian(Math.cos(kth), Math.sin(kth));
+          y[k]       = evenFFT[k].add(wk.multiply(oddFFT[k]));
+          y[k + n/2] = evenFFT[k].subtract(wk.multiply(oddFFT[k]));
+        });
         return y;
     }
 
@@ -103,9 +108,9 @@ public class FourierTransformer {
   }
   
   public static List<Point2D> getFuncPoints(Complex[] fTime, int range, int nDots){
-    ArrayList<Point2D> points = (ArrayList<Point2D>) IntStream.range(0, fTime.length)
+    ArrayList<Point2D> points = (ArrayList<Point2D>) IntStream.range(0, fTime.length).parallel()
             .mapToObj(n -> {
-            double x = (double) range/nDots * n - range/2;
+            double x = (double) 2 * range/nDots * n - range;
             Point2D point = new Point2D.Double(x, fTime[n].real());
             return point;})
             .collect(Collectors.toList());
@@ -123,7 +128,7 @@ public class FourierTransformer {
     public static Double inverseFourierSeries(List<Double[]> fOmega, Double x, double period){
     Double fTime;
     fTime = fOmega.get(0)[1];
-    fTime += fOmega.stream().skip(1)
+    fTime += fOmega.stream().skip(1).parallel()
       .map(n -> { return (n[1] * Math.cos(Math.PI * n[0] * x / period) + n[2] * Math.sin(Math.PI * n[0] * x / period));})
       .collect(Collectors.summingDouble(Double::doubleValue));
     

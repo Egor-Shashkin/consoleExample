@@ -4,24 +4,16 @@
  */
 package com.myUtility;
 
-import java.awt.Point;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
-import javax.annotation.concurrent.GuardedBy;
 import net.objecthunter.exp4j.Expression;
 import net.objecthunter.exp4j.ExpressionBuilder;
 import org.apache.commons.numbers.complex.Complex;
@@ -30,10 +22,10 @@ import org.apache.commons.numbers.complex.Complex;
  * @author Andrei
  */
 public class FourierTransformer {
-  private static final int nDots = 2048;
+  private static final int NDOTS = 1024;
 
-  private static ExecutorService exec = Executors.newCachedThreadPool();
-
+  private static final ExecutorService exec = Executors.newCachedThreadPool();
+  //TODO concurrent fft
    public static Complex[] fft(Complex[] x) {
         int n = x.length;
 
@@ -101,24 +93,29 @@ public class FourierTransformer {
 
   
   public static Complex[] getFuncValues(String equation, int range){
-    double step = (double) 2 * range/nDots;
+    double step = (double) 2 * range/NDOTS;
     Expression expression = new ExpressionBuilder(equation).variable("x").build();
-    Complex[] values = (Complex[]) IntStream.range(0, nDots).mapToObj(n -> {
+    Complex[] values = (Complex[]) IntStream.range(0, NDOTS).mapToObj(n -> {
       double x = n*step - range;
       return Complex.ZERO.add(expression.setVariable("x", x).evaluate());})
       .toArray(nDots -> new Complex[nDots]);
     return values;
   }
   
-  public static List<Point2D> getFuncPoints(Complex[] fTime, int range){
+  public static List<Point2D> getFuncPoints(Complex[] fTime, int range, int nDots){
     ArrayList<Point2D> points = (ArrayList<Point2D>) IntStream.range(0, fTime.length)
             .mapToObj(n -> {
-            double x = (double) 2 * range/nDots * n - range;
+            double x = (double) range/nDots * n - range/2;
             Point2D point = new Point2D.Double(x, fTime[n].real());
             return point;})
             .collect(Collectors.toList());
     return points;
   }
+  
+  public static List<Point2D> getFuncPoints(Complex[] fTime, int range){
+    return getFuncPoints(fTime, range, NDOTS);
+  }
+
 
   public static Double inverseFourierSeries(List<Double[]> fOmega, Double x){
     return inverseFourierSeries(fOmega, x, Math.PI);
@@ -203,14 +200,12 @@ public class FourierTransformer {
   
   
   private static class getNthFreqMultiplier implements Callable<Double[]>{
-  String equation;
   double period;
   int i;
   Expression expressionA;
   Expression expressionB;
 
   public getNthFreqMultiplier(String equation, double period, int i) {
-    this.equation = equation;
     this.period = period;
     this.i = i;
     expressionA = new ExpressionBuilder(String.format("(%s) * cos(%s * %s * x / %s)", equation, 2 * Math.PI, i, period)).variable("x").build();

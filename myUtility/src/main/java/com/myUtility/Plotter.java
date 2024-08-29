@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import org.jfree.chart.ChartFactory;
@@ -32,42 +33,45 @@ import org.jfree.data.xy.XYSeriesCollection;
 public class Plotter extends ApplicationFrame implements ActionListener{
   private final int width;
   private final int height;
-  private int counter;
-  private static XYLineAndShapeRenderer renderer;
+  private AtomicInteger counter;
   private XYSeriesCollection dataset;
   ArrayList<Point2D> cord;
+  JButton button;
   
 
 
 
   public Plotter(String applicationTitle, String chartTitle, ArrayList<Point2D> cord) {
-      super(applicationTitle);
-      this.cord = cord;
-      counter = 0;
-      width = 900;
-      height = 600;
-      dataset = createDataset(cord);
-      JFreeChart xylineChart = ChartFactory.createXYLineChart(
-         chartTitle,
-         "x",
-         "f(x)",
-         dataset);
-      JButton button = new JButton("increase amp");
-      button.setActionCommand("CHANGE_AMP");
-      button.addActionListener(this);
-         
-      ChartPanel chartPanel = createPanel(xylineChart);
-      final XYPlot plot = xylineChart.getXYPlot();
-      
-      JPanel panel = new JPanel();
-      chartPanel.add(button, BorderLayout.SOUTH);
-      panel.add(chartPanel);
-      //panel.add(button, BorderLayout.SOUTH);
-      
-      renderer = defaultRenderer();
-      plot.setRenderer(renderer); 
-      setContentPane(panel); 
+      this(applicationTitle, chartTitle);
+      addSeries(cord);
    }
+  
+  public Plotter(String applicationTitle, String chartTitle){
+    super(applicationTitle);
+    counter = new AtomicInteger(0);
+    width = 900;
+    height = 600;
+    dataset = createDataset();
+    JFreeChart xylineChart = ChartFactory.createXYLineChart(
+       chartTitle,
+       "x",
+       "f(x)",
+       dataset);
+    button = new JButton("increase amp");
+    button.setActionCommand("CHANGE_AMP");
+    button.addActionListener(this);
+
+    ChartPanel chartPanel = createPanel(xylineChart);
+    final XYPlot plot = xylineChart.getXYPlot();
+
+    JPanel panel = new JPanel();
+    chartPanel.add(button, BorderLayout.SOUTH);
+    panel.add(chartPanel);
+    //panel.add(button, BorderLayout.SOUTH);
+
+    plot.setRenderer(defaultRenderer()); 
+    setContentPane(panel);
+  }
   
   private ChartPanel createPanel(JFreeChart xylineChart){
     ChartPanel chartPanel = new ChartPanel(xylineChart);
@@ -88,29 +92,46 @@ public class Plotter extends ApplicationFrame implements ActionListener{
   }
   
   private XYSeriesCollection createDataset(ArrayList<Point2D> list){
-    XYSeries dataset = new XYSeries("plot");
-    for (var item : list) {
-      dataset.add(item.getX(), item.getY());
-    }
-    
-    return new XYSeriesCollection(dataset);
+    return new XYSeriesCollection(addSeries(list));
   }
   
-  private XYSeries createSeries(ArrayList<Point2D> list){
-    XYSeries dataset = new XYSeries(counter++);
-    for (var item : list) {
-      dataset.add(item.getX(), item.getY());
-    }
-    
-    return dataset;
+  private XYSeriesCollection createDataset(){
+    return new XYSeriesCollection();
   }
   
+  public XYSeries addSeries(ArrayList<Point2D> list){
+    return addSeries(list, "noname " + counter.incrementAndGet());
+  }
+  
+  public XYSeries addSeries(ArrayList<Point2D> list, String name){
+    XYSeries series = new XYSeries(name);
+    this.cord = list;
+    for (var item : list) {
+      series.add(item.getX(), item.getY());
+    }
+    dataset.addSeries(series);
+    if (dataset.getSeriesCount() > 2) button.setEnabled(false);
+    return series;
+  }
+  
+  @Override
   public void actionPerformed(ActionEvent e){
     if (e.getActionCommand().equals("CHANGE_AMP")){
-      cord.stream().forEach(n -> n.setLocation(n.getX(), 2 * n.getY()));
+      changeAmp();
+    }
+  }
+  
+  private void changeAmp(){
+          cord.stream().forEach(n -> n.setLocation(n.getX(), 2 * n.getY()));
       if (dataset.getSeriesCount() >= 2) 
         dataset.removeSeries(0);
-      this.dataset.addSeries(createSeries(cord));
-    }
+      addSeries(cord);
+//    if (dataset.getSeriesCount() >= 2) 
+//      dataset.removeSeries(0);
+  }
+  
+  public void clearPlot(){
+    dataset.removeAllSeries();
+    button.setEnabled(true);
   }
 }

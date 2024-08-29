@@ -15,6 +15,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -61,7 +62,7 @@ public class App {
         } catch (SocketTimeoutException ex) {
           if (reservations.get() == 0 ) {
           System.out.printf("no new connection attempts detected in last %s seconds%n"
-                  + "shutting down the server%n", timeout);
+                  + "shutting down the server%n", TimeUnit.MILLISECONDS.toSeconds(timeout));
           try {
             serverSocket.close();
             break;

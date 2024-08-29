@@ -4,6 +4,7 @@
  */
 package com.clients;
 
+import com.telemetry.TelemetryParser;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.myUtility.ConnectionMode;
@@ -20,6 +21,8 @@ import java.util.logging.Logger;
  *
  * @author Andrei
  */
+//deprecated, use Client instead
+
 public class GettingAllClient {
   private static Gson gson = new GsonBuilder().setPrettyPrinting().excludeFieldsWithoutExposeAnnotation().create();
   

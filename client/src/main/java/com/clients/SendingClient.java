@@ -19,6 +19,8 @@ import java.util.logging.Logger;
  *
  * @author Andrei
  */
+//deprecated, use Client instead
+
 public class SendingClient {
   
 

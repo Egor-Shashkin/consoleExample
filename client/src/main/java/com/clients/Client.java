@@ -188,7 +188,7 @@ public class Client {
         range = messages.get(0).getRange();
       plot.clearPlot();
       for (TelemetryMessage msg : messages) {
-        exec.execute(new MessagePlot(msg, range, range));
+        exec.execute(new MessagePlot(msg, range));
       }
       plot.pack();
       plot.setVisible(true);
@@ -206,6 +206,12 @@ public class Client {
       this.msg = msg;
       this.range = range;
       this.period = period;
+    }
+    
+    public MessagePlot(TelemetryMessage msg, int range){
+      this.msg = msg;
+      this.range = range;
+      period = 2 * range;
     }
     
     @Override

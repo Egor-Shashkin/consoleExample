@@ -140,13 +140,13 @@ public class FourierTransformer {
   }
   public static List<Point2D> inverseFourierSeries(int range, List<Double[]> fOmega, double period){
     double step = 0.1;
-    int nSteps = (int) (range/step);
+    int nSteps = 2 * (int) (range/step);
     ArrayList<Point2D> fTime;
     
     fTime = (ArrayList<Point2D>) Stream.iterate(0, i -> i + 1)
             .limit(nSteps).parallel()
             .map(x -> {
-              double abscissa = x*step - range/2;
+              double abscissa = x*step - range;
               double ordinate = fOmega.stream().parallel()
                       .map(n -> { return (n[1] * Math.cos(2 * Math.PI * n[0] * abscissa / period) + n[2] * Math.sin(2 * Math.PI * n[0] * abscissa / period));})
                       .collect(Collectors.summingDouble(Double::doubleValue));

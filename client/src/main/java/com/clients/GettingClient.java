@@ -19,12 +19,14 @@ import java.awt.geom.Point2D;
 public class GettingClient {
   public static void main(String[] args){
     ArrayList<Point2D> fTimeRe;
+    ArrayList<Double[]> fOmega;
       int range = 20;
 //      double period = Math.PI * 2;
 //      range = (int)Math.round(period);
       fTimeRe = (ArrayList<Point2D>) FourierTransformer.getFuncPoints(FourierTransformer.ifft(
               (FourierTransformer.fft(FourierTransformer.getFuncValues("exp(x)", range)))), range);
-//      fTimeRe = (ArrayList<Point2D>) transform.inverseFourierSeries(startingPoint, range, fOmega, period);
+      fOmega = (ArrayList<Double[]>) FourierTransformer.FourierSeries("x", range);
+      fTimeRe = (ArrayList<Point2D>) FourierTransformer.inverseFourierSeries(range, fOmega, 2 * range);
       Plotter plot = new Plotter("Title", "Title", fTimeRe);
       plot.pack();
       plot.setVisible(true);

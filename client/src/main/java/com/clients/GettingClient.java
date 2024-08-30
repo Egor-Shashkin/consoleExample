@@ -4,11 +4,9 @@
  */
 package com.clients;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import java.util.ArrayList;
 import com.myUtility.*;
 import java.awt.geom.Point2D;
+import java.util.List;
 
 /**
  *
@@ -18,15 +16,15 @@ import java.awt.geom.Point2D;
 //deprecated, use Client instead
 public class GettingClient {
   public static void main(String[] args){
-    ArrayList<Point2D> fTimeRe;
-    ArrayList<Double[]> fOmega;
+    List<Point2D> fTimeRe;
+    List<Double[]> fOmega;
       int range = 20;
 //      double period = Math.PI * 2;
 //      range = (int)Math.round(period);
-      fTimeRe = (ArrayList<Point2D>) FourierTransformer.getFuncPoints(FourierTransformer.ifft(
+      fTimeRe = FourierTransformer.getFuncPoints(FourierTransformer.ifft(
               (FourierTransformer.fft(FourierTransformer.getFuncValues("exp(x)", range)))), range);
-      fOmega = (ArrayList<Double[]>) FourierTransformer.FourierSeries("x", range);
-      fTimeRe = (ArrayList<Point2D>) FourierTransformer.inverseFourierSeries(range, fOmega, 2 * range);
+      fOmega = FourierTransformer.FourierSeries("x", range);
+      fTimeRe = FourierTransformer.inverseFourierSeries(range, fOmega, 2 * range);
       Plotter plot = new Plotter("Title", "Title", fTimeRe);
       plot.pack();
       plot.setVisible(true);

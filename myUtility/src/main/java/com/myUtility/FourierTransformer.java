@@ -98,7 +98,7 @@ public class FourierTransformer {
 
   
   public static Complex[] getFuncValues(String equation, int range){
-    double step = (double) 2 * range/NDOTS;
+    double step =  2 * (double) range/NDOTS;
     Expression expression = new ExpressionBuilder(equation).variable("x").build();
     Complex[] values = (Complex[]) IntStream.range(0, NDOTS).mapToObj(n -> {
       double x = n*step - range;
@@ -108,7 +108,7 @@ public class FourierTransformer {
   }
   
   public static List<Point2D> getFuncPoints(Complex[] fTime, int range, int nDots){
-    ArrayList<Point2D> points = (ArrayList<Point2D>) IntStream.range(0, fTime.length).parallel()
+    List<Point2D> points = IntStream.range(0, fTime.length).parallel()
             .mapToObj(n -> {
             double x = (double) 2 * range/nDots * n - range;
             Point2D point = new Point2D.Double(x, fTime[n].real());
@@ -141,9 +141,9 @@ public class FourierTransformer {
   public static List<Point2D> inverseFourierSeries(int range, List<Double[]> fOmega, double period){
     double step = 0.1;
     int nSteps = 2 * (int) (range/step);
-    ArrayList<Point2D> fTime;
+    List<Point2D> fTime;
     
-    fTime = (ArrayList<Point2D>) Stream.iterate(0, i -> i + 1)
+    fTime = Stream.iterate(0, i -> i + 1)
             .limit(nSteps).parallel()
             .map(x -> {
               double abscissa = x*step - range;
@@ -161,8 +161,8 @@ public class FourierTransformer {
   public static List<Double[]> FourierSeries(String equation, double period){
     //increasing nFreq can increase integration error which causes artifacts on graph
     int nFreq = 100;
-    ArrayList<Double[]> fOmega = new ArrayList<>();
-    ArrayList<Callable<Double[]>> tasks = new ArrayList<>();
+    List<Double[]> fOmega = new ArrayList<>();
+    List<Callable<Double[]>> tasks = new ArrayList<>();
     Expression e = new ExpressionBuilder(equation).variable("x").build();
     Integer i;
     double a0 = 1/period * integrate(e, period);
@@ -173,7 +173,7 @@ public class FourierTransformer {
       //fOmega.add(new Double[]{i.doubleValue(), an, bn});
     }
     try {
-    fOmega.addAll((ArrayList<Double[]>) exec.invokeAll(tasks).stream().map(n -> {
+    fOmega.addAll((List<Double[]>) exec.invokeAll(tasks).stream().map(n -> {
       try
       {
           return n.get();

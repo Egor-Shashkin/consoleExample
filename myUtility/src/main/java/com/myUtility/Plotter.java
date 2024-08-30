@@ -4,13 +4,17 @@
  */
 package com.myUtility;
 
-import java.awt.*;
+import java.awt.BasicStroke;
+import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JButton;
@@ -35,13 +39,13 @@ public class Plotter extends ApplicationFrame implements ActionListener{
   private final int height;
   private AtomicInteger counter;
   private XYSeriesCollection dataset;
-  ArrayList<Point2D> cord;
+  List<Point2D> cord;
   JButton button;
   
 
 
 
-  public Plotter(String applicationTitle, String chartTitle, ArrayList<Point2D> cord) {
+  public Plotter(String applicationTitle, String chartTitle, List cord) {
       this(applicationTitle, chartTitle);
       addSeries(cord);
    }
@@ -93,11 +97,11 @@ public class Plotter extends ApplicationFrame implements ActionListener{
     return new XYSeriesCollection();
   }
   
-  public XYSeries addSeries(ArrayList<Point2D> list){
+  public XYSeries addSeries(List list){
     return addSeries(list, "noname " + counter.incrementAndGet());
   }
   
-  public XYSeries addSeries(ArrayList<Point2D> list, String name){
+  public XYSeries addSeries(List<Point2D> list, String name){
     XYSeries series = new XYSeries(name);
     this.cord = list;
     for (var item : list) {

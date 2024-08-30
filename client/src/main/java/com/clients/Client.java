@@ -22,6 +22,7 @@ import java.net.InetAddress;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.concurrent.ExecutorService;
@@ -42,13 +43,12 @@ public class Client {
   private static final Plotter plot = new Plotter("Title", "Title");
   private static final ExecutorService exec = Executors.newCachedThreadPool();
 
-  private static Socket clientSocket;
   private static int port;
   private static InetAddress ip;
-
+  //TODO is in notepad++
   public static void main(String[] args) {
     TelemetryMessage message;
-    ArrayList<TelemetryMessage> array;
+    List<TelemetryMessage> array;
     String id;
     String mode;
     String[] input;
@@ -80,6 +80,7 @@ public class Client {
     }
     //running connection
     while (true){
+      System.out.printf("enter connection mode and id (only for send and get):%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
       mode = input[0].toUpperCase();
       try {
@@ -99,7 +100,7 @@ public class Client {
           }
           case "SEND" -> send(id);
           case "GETALL" -> {
-            array = (ArrayList<TelemetryMessage>) getAll();
+            array = getAll();
             plot(array);
           }
           case "EXIT" -> exit(0);
@@ -117,6 +118,7 @@ public class Client {
   private static String connect(Protocol protocol) throws ConnectException, IOException{
     try {
       String response;
+      Socket clientSocket;
       clientSocket = new Socket(ip, port);
       response = protocol.connect(clientSocket);
 //      message.generatingSensorData();
@@ -164,7 +166,7 @@ public class Client {
   }
   
   private static List<TelemetryMessage> getAll() throws ConnectException, IOException{
-    ArrayList<TelemetryMessage> array;
+    List<TelemetryMessage> array;
     String json;
     System.out.println("connecting to server");
     Protocol protocol = new Protocol(ConnectionMode.GETALL.name());
@@ -176,10 +178,9 @@ public class Client {
   
   
   private static void plot(TelemetryMessage message){
-    ArrayList<TelemetryMessage> messages = new ArrayList<>();
+    List<TelemetryMessage> messages = new ArrayList<>();
     messages.add(message);
     plot(messages);
-
   }
   private static void plot(List<TelemetryMessage> messages){
     int range;
@@ -199,8 +200,8 @@ public class Client {
     int range;
     double period;
     TelemetryMessage msg;
-    ArrayList<Double[]> fOmega;
-    ArrayList<Point2D> fTimeRe;
+    List<Double[]> fOmega;
+    List<Point2D> fTimeRe;
 
     public MessagePlot(TelemetryMessage msg, int range, double period) {
       this.msg = msg;
@@ -217,12 +218,12 @@ public class Client {
     @Override
     public void run(){
       try {
-        fOmega = (ArrayList<Double[]>) msg.processingSensorData(SensorData::getValue);
+        fOmega = msg.processingSensorData(SensorData::getValue);
         if (fOmega.get(0).length == 3) {
-          fTimeRe = (ArrayList<Point2D>) FourierTransformer.inverseFourierSeries(range, fOmega, period);
+          fTimeRe = FourierTransformer.inverseFourierSeries(range, fOmega, period);
         } else {
           Complex[] array = fOmega.stream().map(n -> Complex.ofCartesian(n[0], n[1])).toArray(size -> new Complex[size]);
-          fTimeRe = (ArrayList<Point2D>) FourierTransformer.getFuncPoints(FourierTransformer.ifft(array), range, array.length);
+          fTimeRe = FourierTransformer.getFuncPoints(FourierTransformer.ifft(array), range, array.length);
         }
         try {
           plot.addSeries(fTimeRe, msg.getDeviceId());

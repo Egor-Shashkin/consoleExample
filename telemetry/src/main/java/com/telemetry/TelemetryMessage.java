@@ -28,7 +28,7 @@ public class TelemetryMessage {
   private int range;
   @Expose
   @SerializedName("data")
-  private ArrayList<SensorData> data;
+  private List<SensorData> data;
   private static final int NDOTS = 32; //must be power of 2
   private static final int NFREQ = 10; // number of frequencies for fourier series
   private static final int DEFAULT_RANGE = 20; //range on which function was transformed
@@ -43,7 +43,7 @@ public class TelemetryMessage {
     
   }
   
-  public TelemetryMessage(long timeStamp, String deviceId, ArrayList<SensorData> data){
+  public TelemetryMessage(long timeStamp, String deviceId, List<SensorData> data){
     this.data = data;
     this.range = DEFAULT_RANGE;
     this.deviceId = deviceId;

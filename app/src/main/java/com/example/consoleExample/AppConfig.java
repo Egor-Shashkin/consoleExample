@@ -5,11 +5,7 @@
 package com.example.consoleExample;
 
 import static com.example.consoleExample.App.jAct;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.cli.CommandLine;

@@ -52,8 +52,7 @@ public class App {
     
     Runnable startServer = () -> {
       while (true) {
-        //removed lock, might cause some troubles
-        //lock.lock();
+
         try {
 
         System.out.println("waiting for connection");
@@ -75,7 +74,6 @@ public class App {
         } catch (IOException ex) {
           Logger.getLogger(App.class.getName()).log(Level.SEVERE, null, ex);
         } finally {
-          //lock.unlock();
         }
       }
     };

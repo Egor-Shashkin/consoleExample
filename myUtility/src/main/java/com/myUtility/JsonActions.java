@@ -15,9 +15,6 @@ import java.io.BufferedWriter;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Scanner;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 
@@ -27,10 +24,7 @@ import org.apache.commons.cli.Options;
  */
 public class JsonActions {
   private static Gson gson = new GsonBuilder().setPrettyPrinting().create();
-  private static Scanner scan = new Scanner(System.in);
-      
-      
-    public Options ReadJsonOptions(String file){
+  public Options ReadJsonOptions(String file){
       Options options = new Options();
       String shortName;
       String longName;

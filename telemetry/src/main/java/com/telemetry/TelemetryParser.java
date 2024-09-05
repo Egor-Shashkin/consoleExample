@@ -11,8 +11,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
-import com.telemetry.SensorData;
-import com.telemetry.TelemetryMessage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

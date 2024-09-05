@@ -49,11 +49,10 @@ public class Client {
   private static InetAddress ip;
   //TODO is in notepad++
   public static void main(String[] args) {
-    TelemetryMessage message;
-    List<TelemetryMessage> array;
     String id;
     String mode;
     String[] input;
+    List<TelemetryMessage> message =  new ArrayList<>();
     BlockingQueue<TelemetryMessage> queue = new LinkedBlockingQueue<>();
     //getting connection parameters
     while (true){
@@ -81,13 +80,9 @@ public class Client {
         Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
       }
     }
-    //generating sensor threads
-    for (int i = 0; i < 10; i++){
-      exec.submit(new PeriodicSensor(queue, Integer.toString(i)));
-    }
     //running connection
     while (true){
-      System.out.printf("enter connection mode and id (only for send and get):%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
+      System.out.printf("enter connection mode and id or register periodic sender:%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
       mode = input[0].toUpperCase();
       try {
@@ -97,18 +92,23 @@ public class Client {
       }
       try {
         switch (mode) {
+          //TODO: combine get and getall
           case "GET" -> {
             try {
-              message = get(id);
+              if (id.toUpperCase().equals("ALL")){
+                message = getAll();
+              } else message.add(get(id));
               plot(message);
             } catch (JsonSyntaxException e) {
               System.out.println("file not found or corrupted");
             }
           }
           case "SEND" -> send(id);
-          case "GETALL" -> {
-            array = getAll();
-            plot(array);
+          case "SENDER" -> {
+            for (int i = 0; i < 5; i++){
+              exec.submit(new PeriodicSensor(queue, Integer.toString(i)));
+            }
+            exec.submit(new PeriodicSender(queue, ip, port));
           }
           case "EXIT" -> exit(0);
         }
@@ -176,7 +176,7 @@ public class Client {
     List<TelemetryMessage> array;
     String json;
     System.out.println("connecting to server");
-    Protocol protocol = new Protocol(ConnectionMode.GETALL.name());
+    Protocol protocol = new Protocol(ConnectionMode.GET.name(), "ALL");
     json = connect(protocol);
     System.out.println("parsing json");
     array = TelemetryParser.parseTelemetryJsons(json, true);
@@ -184,11 +184,6 @@ public class Client {
   }
   
   
-  private static void plot(TelemetryMessage message){
-    List<TelemetryMessage> messages = new ArrayList<>();
-    messages.add(message);
-    plot(messages);
-  }
   private static void plot(List<TelemetryMessage> messages){
     int range;
     System.out.println("plot the response data? y/n \n default: n\n");

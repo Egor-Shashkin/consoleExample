@@ -10,12 +10,7 @@ import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.geom.Point2D;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import javax.swing.JButton;
 import javax.swing.JPanel;
@@ -26,7 +21,6 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.chart.renderer.xy.XYSplineRenderer;
 import org.jfree.chart.ui.ApplicationFrame;
-import org.jfree.data.xy.XYDataset;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 
@@ -45,7 +39,7 @@ public class Plotter extends ApplicationFrame implements ActionListener{
 
 
 
-  public Plotter(String applicationTitle, String chartTitle, List cord) {
+  public Plotter(String applicationTitle, String chartTitle, List<Point2D> cord) {
       this(applicationTitle, chartTitle);
       addSeries(cord);
    }
@@ -97,7 +91,7 @@ public class Plotter extends ApplicationFrame implements ActionListener{
     return new XYSeriesCollection();
   }
   
-  public XYSeries addSeries(List list){
+  public XYSeries addSeries(List<Point2D> list){
     return addSeries(list, "noname " + counter.incrementAndGet());
   }
   

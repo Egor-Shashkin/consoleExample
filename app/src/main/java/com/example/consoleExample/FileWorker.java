@@ -12,13 +12,9 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
-import java.nio.file.StandardOpenOption;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -28,14 +24,10 @@ import java.util.stream.Collectors;
  * @author Andrei
  */
 public class FileWorker {
-  private BufferedReader reader;
-  private String result;
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-  private final String NOFILE;
-  
-  public FileWorker() {
-    NOFILE = "no such file";
-  }
+  private final String NOFILE  = "no such file";
+  private String result;
+
   
   public String getFileData(File file) throws IOException{
     try (BufferedReader reader = new BufferedReader(new FileReader(file))){

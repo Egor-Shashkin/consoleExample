@@ -4,10 +4,10 @@
  */
 package com.myUtility;
 
-import java.io.DataOutputStream;
 import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 /**
  *
@@ -53,20 +53,18 @@ public class Protocol{
   
   public String connect(Socket socket) throws IOException, ClassNotFoundException{
     String response = null;
-    DataOutputStream out;
+    ObjectOutputStream out;
     ObjectInputStream in;
-    out = new DataOutputStream(socket.getOutputStream());
+    out = new ObjectOutputStream(socket.getOutputStream());
     in = new ObjectInputStream(socket.getInputStream());
     try {
       System.out.println("waiting for spare server thread");
       in.readObject();
       System.out.println("sending request");
-      out.writeBytes(connectionMessage());
-      out.flush();
-      if (!mode.equalsIgnoreCase(ConnectionMode.SEND.name())){
+      out.writeObject(connectionMessage());
       System.out.println("getting response");
       response = (String) in.readObject();
-      }
+      System.out.println(response);
     } catch (EOFException e) {
       System.out.println("input read error");
     }

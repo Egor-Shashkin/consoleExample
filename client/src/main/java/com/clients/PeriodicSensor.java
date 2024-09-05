@@ -4,14 +4,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import com.myUtility.ConnectionMode;
-import com.myUtility.Protocol;
 import com.telemetry.TelemetryMessage;
 
 public class PeriodicSensor implements Runnable {
   private static final int SLEEP_TIME = 20;
   private BlockingQueue<TelemetryMessage> queue = new LinkedBlockingQueue<>();
-  private Protocol protocol;
   private String id;
   private TelemetryMessage message;
   

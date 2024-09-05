@@ -18,8 +18,8 @@ import java.net.Socket;
 public class Protocol{
 
   private final String mode;
-  private final String id;
-  private final String message;
+  private String id;
+  private String message;
 
   public Protocol(String mode, String id, String message) {
     this.mode = mode;
@@ -37,6 +37,14 @@ public class Protocol{
     this.mode = mode;
     id = "";
     message = "";
+  }
+
+  public void setMessage(String msg){
+    this.message = msg;
+  }
+
+  public void setId(String id){
+    this.id = id;
   }
   
   public String connectionMessage(){

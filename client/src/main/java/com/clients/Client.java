@@ -25,8 +25,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.numbers.complex.Complex;
@@ -52,6 +54,7 @@ public class Client {
     String id;
     String mode;
     String[] input;
+    BlockingQueue<TelemetryMessage> queue = new LinkedBlockingQueue<>();
     //getting connection parameters
     while (true){
       System.out.println("enter port and ip for connection (default: 7777 localhost):\n");
@@ -77,6 +80,10 @@ public class Client {
       } catch (UnknownHostException ex) {
         Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
       }
+    }
+    //generating sensor threads
+    for (int i = 0; i < 10; i++){
+      exec.submit(new PeriodicSensor(queue, Integer.toString(i)));
     }
     //running connection
     while (true){
@@ -203,12 +210,6 @@ public class Client {
     List<Double[]> fOmega;
     List<Point2D> fTimeRe;
 
-    public MessagePlot(TelemetryMessage msg, int range, double period) {
-      this.msg = msg;
-      this.range = range;
-      this.period = period;
-    }
-    
     public MessagePlot(TelemetryMessage msg, int range){
       this.msg = msg;
       this.range = range;

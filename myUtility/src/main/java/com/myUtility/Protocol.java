@@ -5,6 +5,7 @@
 package com.myUtility;
 
 import java.io.EOFException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -16,7 +17,8 @@ import java.net.Socket;
 
 
 public class Protocol{
-
+  public static final String OK = "200 OK";
+  public static final String NOT_FOUND = "404 File not found";
   private final String mode;
   private String id;
   private String message;
@@ -64,6 +66,7 @@ public class Protocol{
       out.writeObject(connectionMessage());
       System.out.println("getting response");
       response = (String) in.readObject();
+      if (response.equals(NOT_FOUND)) throw new FileNotFoundException();
       System.out.println(response);
     } catch (EOFException e) {
       System.out.println("input read error");

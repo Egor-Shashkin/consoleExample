@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.example.consoleExample;
+package com.myUtility;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,41 +25,42 @@ import java.util.stream.Collectors;
  */
 public class FileWorker {
   private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-  private final String NOFILE  = "no such file";
   private String result;
 
+  private File getFile(File filePath, String id){
+    String fileName = String.format("telemetry_data_%s.json", id);
+    return new File(filePath, fileName);
+  }
   
-  public String getFileData(File file) throws IOException{
+  public String getFileData(File filePath, String id) throws IOException, FileNotFoundException{
+    File file = getFile(filePath, id);
     try (BufferedReader reader = new BufferedReader(new FileReader(file))){
-      result = reader.lines().collect(Collectors.joining("\n"));
+      result = "[" + reader.lines().collect(Collectors.joining("\n")) + "]";
       return result;
-    } catch (FileNotFoundException ex) {
-      return NOFILE;
     }
   }
   
   
-  //
-  public String getAllFileData(File filePath) throws IOException{
+  public String getAllFileData(File filePath) throws IOException, FileNotFoundException{
     JsonArray array = new JsonArray();
     for (File file : filePath.listFiles()){
-      try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
-        array.add(JsonParser.parseReader(reader));
-      } catch (FileNotFoundException ex) {
-        return NOFILE;
+      if (!file.isDirectory()){
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+          array.add(JsonParser.parseReader(reader));
+        }
       }
     }
-    
     return gson.toJson(array, JsonArray.class);
   }
   
-  public void writeFileData(File file, String json){
-    synchronized (file) {
+  public void writeFileData(File filePath, String id, String json){
+    File file = getFile(filePath, id);
+    // synchronized (file) {
       try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
         writer.write(json);
       } catch (IOException ex) {
         Logger.getLogger(FileWorker.class.getName()).log(Level.SEVERE, null, ex);
       }
-    }
+    // }
   }
 }

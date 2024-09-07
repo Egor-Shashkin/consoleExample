@@ -5,7 +5,11 @@
 package com.example.consoleExample;
 
 import com.myUtility.ConnectionMode;
+import com.myUtility.FileWorker;
+import com.myUtility.Protocol;
+
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -20,15 +24,13 @@ import java.util.logging.Logger;
  * @author Andrei
  */
 public class ServerThread implements Runnable{
-  private static final String OK_STRING = "200 OK";
+
   private Socket clientSocket;
   private ObjectOutputStream out;
   private ObjectInputStream in;
   private int timeout;
-  private String fileName;
   private File filePath;
   private String[] meta;
-  private File file;
   private FileWorker worker;
   private String output;
   private String[] input;
@@ -38,8 +40,7 @@ public class ServerThread implements Runnable{
       this.clientSocket = clientSocket;
       this.worker = worker;
       timeout = 60000;
-      fileName = "telemetry_data_default.json";
-      filePath = new File("C:\\Users\\Andrei\\Documents\\ConsoleExampleDocs\\");
+      filePath = new File("C:\\Users\\TOPKEK\\Desktop\\ConsoleFiles\\ServerFiles");
       App.reservations.incrementAndGet();
       
   }
@@ -61,25 +62,24 @@ public class ServerThread implements Runnable{
       meta = input[0].split(" ");
       id = meta[1].strip();
       
-      //TODO catch exception when id is invalid
       //choosing action according to command
       if (meta[0].equals(ConnectionMode.SEND.name())){
         System.out.printf("T%s: server: getting values from %s %n", Thread.currentThread().getId(), id);
         String json = input[1];
-        fileName = String.format("telemetry_data_%s.json", id);
-        file = new File(filePath, fileName);
-        worker.writeFileData(file, json);
-        out.writeObject(OK_STRING);
+        worker.writeFileData(filePath, id, json);
+        out.writeObject(Protocol.OK);
       }
 
       else if (meta[0].equals(ConnectionMode.GET.name())){
-        if (id.toUpperCase().equals("ALL")) {
-          output = worker.getAllFileData(filePath);
-        } else {
-          fileName = String.format("telemetry_data_%s.json", id);
-          file = new File(filePath, fileName);
-          System.out.println("server: sending values");
-          output = worker.getFileData(file);
+        try {
+          if (id.toUpperCase().equals("ALL")) {
+            output = worker.getAllFileData(filePath);
+          } else {
+            System.out.println("server: sending values");
+            output = worker.getFileData(filePath, id);
+          }
+        } catch (FileNotFoundException e) {
+          output = Protocol.NOT_FOUND;
         }
         out.writeObject(output);
         System.out.println("server: values sent");
@@ -94,11 +94,8 @@ public class ServerThread implements Runnable{
 
     } catch (SocketTimeoutException ex) {
       System.out.printf("waiting socket input time exceed %s%nTerminating connection%n", TimeUnit.MILLISECONDS.toSeconds(timeout));
-    } catch (IOException ex) {
+    } catch (IOException | ClassNotFoundException ex) {
       Logger.getLogger(ServerThread.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (ClassNotFoundException e) {
-      // TODO Auto-generated catch block
-      e.printStackTrace();
     } finally {
       try {
         out.close();

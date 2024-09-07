@@ -15,6 +15,7 @@ import com.myUtility.Plotter;
 import com.myUtility.Protocol;
 import com.telemetry.SensorData;
 import java.awt.geom.Point2D;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import static java.lang.System.exit;
 import java.net.ConnectException;
@@ -28,6 +29,7 @@ import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -47,11 +49,13 @@ public class Client {
 
   private static int port;
   private static InetAddress ip;
-  //TODO is in notepad++
+  @SuppressWarnings("null")
   public static void main(String[] args) {
     String id;
     String mode;
     String[] input;
+    Future<?> sender = null;
+    boolean senderRegistered = false;
     List<TelemetryMessage> message =  new ArrayList<>();
     BlockingQueue<TelemetryMessage> queue = new LinkedBlockingQueue<>();
     //getting connection parameters
@@ -81,6 +85,7 @@ public class Client {
       }
     }
     //running connection
+    //TODO check if able to connect
     while (true){
       System.out.printf("enter connection mode and id or register periodic sender:%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
@@ -92,25 +97,32 @@ public class Client {
       }
       try {
         switch (mode) {
-          //TODO: combine get and getall
           case "GET" -> {
             try {
-              if (id.toUpperCase().equals("ALL")){
-                message = getAll();
-              } else message.add(get(id));
+              message = get(id);
               plot(message);
             } catch (JsonSyntaxException e) {
-              System.out.println("file not found or corrupted");
+              System.out.println("file corrupted");
+            } catch (FileNotFoundException e) {
+              System.out.println("file not found");
             }
           }
           case "SEND" -> send(id);
           case "SENDER" -> {
-            for (int i = 0; i < 5; i++){
-              exec.submit(new PeriodicSensor(queue, Integer.toString(i)));
-            }
-            exec.submit(new PeriodicSender(queue, ip, port));
+            if (!senderRegistered){
+              for (int i = 0; i < 5; i++){
+                exec.submit(new PeriodicSensor(queue, Integer.toString(i)));
+              }
+              sender = exec.submit(new PeriodicSender(queue, ip, port));
+              senderRegistered = true;
+            } else System.out.println("sender already registered");
           }
-          case "EXIT" -> exit(0);
+          case "EXIT" -> {
+            if (senderRegistered) sender.cancel(true);
+            exec.shutdown();
+
+            exit(0);
+          }
         }
       } catch (ConnectException ex) {
         System.out.println("Connection error");
@@ -157,29 +169,16 @@ public class Client {
       connect(protocol);
   }
   
+
   
-  private static TelemetryMessage get(String id) throws ConnectException, IOException{
-    TelemetryMessage message;
+  private static List<TelemetryMessage> get(String id) throws ConnectException, IOException{
+    List<TelemetryMessage> array;
     String json;
     System.out.println("connecting to server");
     Protocol protocol = new Protocol(ConnectionMode.GET.name(), id);
     json = connect(protocol);
     System.out.println("parsing json");
-    if (json != null)
-      message = TelemetryParser.parseTelemetryJson(json, true);
-    else
-      message = TelemetryMessage.getDefaultMessage();
-    return message;
-  }
-  
-  private static List<TelemetryMessage> getAll() throws ConnectException, IOException{
-    List<TelemetryMessage> array;
-    String json;
-    System.out.println("connecting to server");
-    Protocol protocol = new Protocol(ConnectionMode.GET.name(), "ALL");
-    json = connect(protocol);
-    System.out.println("parsing json");
-    array = TelemetryParser.parseTelemetryJsons(json, true);
+    array = TelemetryParser.parseTelemetryJson(json, true);
     return array;
   }
   

@@ -5,6 +5,7 @@ package com.example.consoleExample;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.myUtility.FileWorker;
 import com.myUtility.JsonActions;
 import java.io.IOException;
 import static java.lang.System.exit;
@@ -32,7 +33,6 @@ public class App {
 
     
     
-    //TODO: add tests for SendingClient, GettingClient, SlowClient, GettingAllClient
   
   public static void main(String[] args) throws IOException {
   //--------------------- initializing variables -----------------------------//

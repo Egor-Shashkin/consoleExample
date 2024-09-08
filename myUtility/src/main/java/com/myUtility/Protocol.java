@@ -17,9 +17,10 @@ import java.net.Socket;
 
 
 public class Protocol{
+  public static final String CONTINUE = "100 Continue";
   public static final String OK = "200 OK";
   public static final String NOT_FOUND = "404 File not found";
-  private final String mode;
+  private String mode;
   private String id;
   private String message;
 
@@ -39,6 +40,19 @@ public class Protocol{
     this.mode = mode;
     id = "";
     message = "";
+  }
+
+  
+
+  public Protocol() {
+    mode = ConnectionMode.GET.name();
+    id = "";
+    message = "";
+  }
+
+  
+  public void setMode(String mode) {
+    this.mode = mode;
   }
 
   public void setMessage(String msg){
@@ -78,6 +92,7 @@ public class Protocol{
     System.out.println("Connection closed");
     return response;
   }
+
   
 }
 

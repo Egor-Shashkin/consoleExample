@@ -85,13 +85,10 @@ public class ServerThread implements Runnable{
         System.out.println("server: values sent");
       }
       
-
       else {
-        out.writeBytes("unknown connection");
-        System.out.println("server: meta error");
+        out.writeObject(Protocol.CONTINUE);
+        System.out.println("server: connection confirmed");
       }
-      //clientSocket.close();
-
     } catch (SocketTimeoutException ex) {
       System.out.printf("waiting socket input time exceed %s%nTerminating connection%n", TimeUnit.MILLISECONDS.toSeconds(timeout));
     } catch (IOException | ClassNotFoundException ex) {

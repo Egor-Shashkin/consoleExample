@@ -19,6 +19,7 @@ public class PeriodicSender implements Runnable {
   private static final int SOCKET_TIMEOUT = 10000;
   private static final int DEFAULT_TIMEOUT = 10000;
   private static final double TIMEOUT_INCREASE = 0.6;
+  private static final int MAX_TIMEOUT = 60000;
   private static final FileWorker worker = new FileWorker();
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private static final File FILE_PATH = new File("C:\\Users\\TOPKEK\\Desktop\\ConsoleFiles\\ClientBackups");
@@ -66,10 +67,10 @@ public class PeriodicSender implements Runnable {
         }
         throw new IOException();
       } catch (IOException | ClassNotFoundException e) {
-        //TODO add timeout limit
         System.out.printf("sending error. next try in %s seconds %n", TimeUnit.MILLISECONDS.toSeconds(timeout));
         TimeUnit.MILLISECONDS.sleep(timeout);
         timeout = (int) Math.round(timeout * (1 + TIMEOUT_INCREASE));
+        timeout = timeout > MAX_TIMEOUT ? MAX_TIMEOUT : timeout;
       }
     }
   }

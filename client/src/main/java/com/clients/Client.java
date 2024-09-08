@@ -34,7 +34,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.numbers.complex.Complex;
-import org.apache.commons.validator.routines.InetAddressValidator;
 
 /**
  *
@@ -43,7 +42,6 @@ import org.apache.commons.validator.routines.InetAddressValidator;
 public class Client {
   private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
   private static final Scanner scan = new Scanner(System.in);
-  private static final InetAddressValidator ipValidator = new InetAddressValidator();
   private static final Plotter plot = new Plotter("Title", "Title");
   private static final ExecutorService exec = Executors.newCachedThreadPool();
 
@@ -58,25 +56,21 @@ public class Client {
     boolean senderRegistered = false;
     List<TelemetryMessage> message =  new ArrayList<>();
     BlockingQueue<TelemetryMessage> queue = new LinkedBlockingQueue<>();
+    Protocol protocol = new Protocol();
     //getting connection parameters
     while (true){
       System.out.println("enter port and ip for connection (default: 7777 localhost):\n");
       input = scan.nextLine().split(" ");
       try {
-        if (ipValidator.isValid(input[1])){
-          port = Integer.parseInt(input[0]);
-          ip = InetAddress.getByName(input[1]);
-          break;
-        }
-        else {
-          System.out.println("invalid ip");
-        }
+        ip = InetAddress.getByName(input[1]);
+        port = Integer.parseInt(input[0]);
+        if (checkConnection(protocol)) break;
       } catch (ArrayIndexOutOfBoundsException e) {
         try {
           System.out.println("assigning default values");
           port = 7777;
           ip = InetAddress.getLocalHost();
-          break;
+          if (checkConnection(protocol)) break;
         } catch (UnknownHostException ex) {
           Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -85,7 +79,6 @@ public class Client {
       }
     }
     //running connection
-    //TODO check if able to connect
     while (true){
       System.out.printf("enter connection mode and id or register periodic sender:%n%s [id] %n or exit to stop%n", Arrays.asList(ConnectionMode.values()));
       input = scan.nextLine().split(" ");
@@ -95,11 +88,12 @@ public class Client {
       } catch (ArrayIndexOutOfBoundsException ex) {
         id = "default";
       }
+
       try {
         switch (mode) {
           case "GET" -> {
             try {
-              message = get(id);
+              message = get(protocol, id);
               plot(message);
             } catch (JsonSyntaxException e) {
               System.out.println("file corrupted");
@@ -107,7 +101,7 @@ public class Client {
               System.out.println("file not found");
             }
           }
-          case "SEND" -> send(id);
+          case "SEND" -> send(protocol, id);
           case "SENDER" -> {
             if (!senderRegistered){
               for (int i = 0; i < 5; i++){
@@ -134,13 +128,23 @@ public class Client {
   }
 
 
+  private static boolean checkConnection(Protocol protocol) {
+    protocol.setMode("connectioncheck");
+    try {
+      return connect(protocol).equals(Protocol.CONTINUE);
+    } catch (IOException e) {
+      e.printStackTrace();
+      return false;
+    }
+  }
+
+
   private static String connect(Protocol protocol) throws ConnectException, IOException{
     try {
       String response;
       Socket clientSocket;
       clientSocket = new Socket(ip, port);
       response = protocol.connect(clientSocket);
-//      message.generatingSensorData();
       return response;
     } catch (ClassNotFoundException ex) {
       Logger.getLogger(Client.class.getName()).log(Level.SEVERE, null, ex);
@@ -149,7 +153,7 @@ public class Client {
   }
   
   
-  private static void send(String id) throws ConnectException, IOException{
+  private static void send(Protocol protocol, String id) throws ConnectException, IOException{
       TelemetryMessage message = new TelemetryMessage(id);
       String type;
       String json;
@@ -165,17 +169,24 @@ public class Client {
       }
     }
       json = gson.toJson(message, TelemetryMessage.class);
-      Protocol protocol = new Protocol(ConnectionMode.SEND.name(), id, json);
+      // memory efficiency vs readablility?
+      // Protocol protocol = new Protocol(ConnectionMode.SEND.name(), id, json);
+      protocol.setMode(ConnectionMode.SEND.name());
+      protocol.setId(id);
+      protocol.setMessage(json);
       connect(protocol);
   }
   
 
   
-  private static List<TelemetryMessage> get(String id) throws ConnectException, IOException{
+  private static List<TelemetryMessage> get(Protocol protocol, String id) throws ConnectException, IOException{
     List<TelemetryMessage> array;
     String json;
     System.out.println("connecting to server");
-    Protocol protocol = new Protocol(ConnectionMode.GET.name(), id);
+    // Protocol protocol = new Protocol(ConnectionMode.GET.name(), id);
+    protocol.setMode(ConnectionMode.GET.name());
+    protocol.setId(id);
+    protocol.setMessage("");
     json = connect(protocol);
     System.out.println("parsing json");
     array = TelemetryParser.parseTelemetryJson(json, true);

@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+    id 'org.openjfx.javafxplugin' version '0.1.0'
+
 }
 
 repositories {
@@ -10,24 +12,23 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter:5.9.3'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'com.google.guava:guava:32.1.1-jre'
-    implementation(project(':myUtility'))
-    implementation(project(':telemetry'))
-    implementation(project(':projection'))
-    implementation 'com.google.code.gson:gson:2.11.0'    
-    implementation 'commons-cli:commons-cli:1.8.0'
+    implementation fileTree(dir: '../apache/commons-math-4.0-beta1', include: ['*.jar'])
     implementation files('../commons-cli-1.8.0.jar')
-    implementation 'org.jfree:jfreechart:1.5.3'
-    implementation 'com.codepoetics:protonpack:1.16'
     implementation files('../apache/commons-numbers-1.2/commons-numbers-complex-1.2.jar')
-    implementation files('../apache/commons-validator-1.9.0/commons-validator-1.9.0.jar')
+    // implementation files('../apache/commons-math-4.0-beta1/commons-math4-legacy-4.0-beta1.jar')
+    // implementation files('../apache/commons-math-4.0-beta1/commons-math4-legacy-exception-4.0-beta1.jar')
 
-
+    implementation 'net.objecthunter:exp4j:0.4.8'
 }
 
 tasks.withType(Jar) {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
 }
 
+
+
 test {
     useJUnitPlatform()
 }
+
+

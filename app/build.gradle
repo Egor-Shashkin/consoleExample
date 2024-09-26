@@ -20,7 +20,9 @@ tasks.named('run') {
     dependsOn(task1)
     
 }
-
+tasks.withType(AbstractArchiveTask) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
 
 repositories {
     // Use Maven Central for resolving dependencies.
@@ -52,6 +54,8 @@ java {
         languageVersion = JavaLanguageVersion.of(18)
     }
 }
+
+
 
 tasks.withType(JavaCompile).configureEach {
     options.compilerArgs += ['-Xdoclint:none', '-Xlint:none', '-nowarn']

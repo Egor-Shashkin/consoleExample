@@ -23,6 +23,10 @@ dependencies {
 
 }
 
+tasks.withType(Jar) {
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
 test {
     useJUnitPlatform()
 }

@@ -142,7 +142,6 @@ public class FourierTransformer {
     double step = 0.1;
     int nSteps = 2 * (int) (range/step);
     List<Point2D> fTime;
-    
     fTime = Stream.iterate(0, i -> i + 1)
             .limit(nSteps).parallel()
             .map(x -> {

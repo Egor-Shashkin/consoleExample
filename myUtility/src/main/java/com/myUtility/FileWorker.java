@@ -8,6 +8,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
+
+import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -18,6 +22,8 @@ import java.io.IOException;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
+
+import javax.imageio.ImageIO;
 
 /**
  *
@@ -62,5 +68,12 @@ public class FileWorker {
         Logger.getLogger(FileWorker.class.getName()).log(Level.SEVERE, null, ex);
       }
     // }
+  }
+
+  public byte[] jpgToByte(File img) throws IOException{
+    BufferedImage bufferedImage = ImageIO.read(img);
+    WritableRaster raster = bufferedImage.getRaster();
+    DataBufferByte data = (DataBufferByte) raster.getDataBuffer();
+    return data.getData();
   }
 }

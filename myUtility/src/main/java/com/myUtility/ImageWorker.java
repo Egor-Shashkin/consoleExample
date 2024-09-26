@@ -6,15 +6,9 @@ import java.awt.image.ConvolveOp;
 import java.awt.image.DataBufferByte;
 import java.awt.image.Kernel;
 import java.awt.image.WritableRaster;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.Arrays;
-
 import javax.imageio.ImageIO;
-
-import org.apache.commons.numbers.complex.Complex;
 
 public class ImageWorker {
   private static float[] defaultBlur = {
@@ -45,15 +39,15 @@ public class ImageWorker {
     return shiftedImage;
   }
 
-  public BufferedImage inverseFilter(){
-    byte[] imgBytes = getAsByteArray();
-    Complex[] imgComplex = new Complex[imgBytes.length];
-    for (int i = 0; i < imgBytes.length; i++){
-      imgComplex[i] = Complex.ZERO.add(imgBytes[i]);
-    }
-    Complex[] fftimg = FourierTransformer.fft(imgComplex);
+  // public BufferedImage inverseFilter(){
+  //   byte[] imgBytes = getAsByteArray();
+  //   Complex[] imgComplex = new Complex[imgBytes.length];
+  //   for (int i = 0; i < imgBytes.length; i++){
+  //     imgComplex[i] = Complex.ZERO.add(imgBytes[i]);
+  //   }
+  //   Complex[] fftimg = FourierTransformer.fft(imgComplex);
 
-  }
+  // }
 
   public byte[] getAsByteArray(){
     WritableRaster raster = image.getRaster();

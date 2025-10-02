@@ -38,11 +38,14 @@ dependencies {
     // This dependency is used by the application.
     implementation 'commons-cli:commons-cli:1.8.0'
     implementation libs.guava
-    implementation(project(':telemetry'))
-    implementation(project(':client'))
-    implementation(project(':myUtility'))
+    implementation project(':telemetry')
+    implementation project(':client')
+    implementation project(':myUtility')
     implementation 'com.google.code.gson:gson:2.11.0'
     implementation 'com.codepoetics:protonpack:1.16'
+    implementation files('../apache/commons-numbers-1.2/commons-numbers-complex-1.2.jar')
+    implementation 'org.jfree:jfreechart:1.5.3'
+    implementation 'net.objecthunter:exp4j:0.4.8'
 
 }
 

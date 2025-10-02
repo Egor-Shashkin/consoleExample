@@ -4,9 +4,6 @@
  */
 package com.example.consoleExample;
 
-import com.myUtility.ConnectionMode;
-import com.myUtility.FileWorker;
-import com.myUtility.Protocol;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -34,13 +31,14 @@ public class ServerThread implements Runnable{
   private FileWorker worker;
   private String output;
   private String[] input;
-  private String id;  
+  private String id; 
 
   public ServerThread(Socket clientSocket, FileWorker worker) throws IOException {
       this.clientSocket = clientSocket;
       this.worker = worker;
       timeout = 60000;
-      filePath = new File("C:\\Users\\TOPKEK\\Desktop\\ConsoleFiles\\ServerFiles");
+      // filePath = new File("C:\\Users\\TOPKEK\\Desktop\\ConsoleFiles\\ServerFiles");
+      filePath = new File(RootFinder.findGradleProjectRoot() + "\\ConsoleFiles");
       App.reservations.incrementAndGet();
       
   }

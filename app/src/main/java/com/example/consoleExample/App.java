@@ -5,8 +5,6 @@ package com.example.consoleExample;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.myUtility.FileWorker;
-import com.myUtility.JsonActions;
 import java.io.IOException;
 import static java.lang.System.exit;
 import java.net.ServerSocket;
@@ -20,7 +18,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.apache.commons.cli.*;
 
 
 
@@ -36,9 +33,6 @@ public class App {
   
   public static void main(String[] args) throws IOException {
   //--------------------- initializing variables -----------------------------//
-    AppConfig config = new AppConfig();
-    Options options = config.configureOptions();
-    config.optionsExecution(options, args);
 
     //exec is used for running server
     ExecutorService exec = Executors.newFixedThreadPool(4);
